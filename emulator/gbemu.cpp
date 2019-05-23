@@ -1,53 +1,58 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <string.h> //needed by memcpy, for some reason
-using namespace std;
+#include "includes.hpp"
+#include "gbemu.hpp"
 
-//arg 1 is bootrom, arg 2 is game rom
+//arg 1 is game rom, arg 2 is bootrom
 int main (int argc, char** argv)
 {
-    if (argv[1] == NULL || argv[2] == NULL)
+    if (argv[1] == NULL)
     {
-        printf("Both a bootrom and a game ROM must be provided!\n");
-        exit(1);
+        logging::logerr("A ROM is needed!", true);
     }
-    //Load the ROM first
-	FILE *f = fopen(argv[2], "rb");
+    //Load the ROM
+	FILE *f = fopen(argv[1], "rb");
 	if (f==NULL)
 	{
-		printf("error: Couldn't open %s\n", argv[2]);
-		exit(1);
+        logging::logerr("error: Couldn't open " + std::string(argv[1]), true);
 	}
     //Read the ROM into RAM
 	fseek(f, 0L, SEEK_END);
 	int fsize = ftell(f);
 	fseek(f, 0L, SEEK_SET);
-    unsigned char* memory = (unsigned char *)malloc(fsize);
-    fread(memory, fsize, 1, f);
+    byte* cart = new byte[fsize];
+    fread(cart, fsize, 1, f);
     fclose(f);
-    //Store the first 256 bytes of the ROM into a buffer so it can be restored
-    //after the boot process is finished
-    unsigned char* romStartBuffer = (unsigned char *)malloc(256);
-    memcpy(romStartBuffer, memory, 256);
-    //Load the bootrom
-	f = fopen(argv[1], "rb");
-	if (f==NULL)
-	{
-		printf("error: Couldn't open %s\n", argv[1]);
-		exit(1);
-	}
-    fread(memory, 256, 1, f);
-    fclose(f);
-    /*
-    for (int i = 0; i < fsize; i++)
+    memory Memory;
+    if (argv[2] != NULL)
     {
-        printf("%x", memory[i]);
+        //Load the bootrom
+        byte* bootrom = new byte[256];
+	    f = fopen(argv[2], "rb");
+	    if (f==NULL)
+	    {
+	    	logging::logerr("error: Couldn't open " + std::string(argv[2]), true);
+    	}
+        fread(bootrom, 256, 1, f);
+        fclose(f);
+        Memory.init(cart, bootrom);
+        delete[] bootrom;
+    }
+    else
+    {
+        //TODO: handle not having a bootrom, initialize ram and registers as the bootrom would etc
+        logging::logerr("need a bootrom for now", true);
+    }
+    
+    /*
+    for (ushort i = 0; i < fsize; i++)
+    {
+        printf("%x", Memory.get(i));
         if (i == 255)
         {
             printf("\n\n");
         }
     }
     */
+
+    //cleanup before exit here
     return 0;
 }
