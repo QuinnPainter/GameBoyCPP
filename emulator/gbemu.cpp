@@ -22,6 +22,7 @@ int main (int argc, char** argv)
     fread(cart, fsize, 1, f);
     fclose(f);
     memory Memory;
+    cpuState state;
     if (argv[2] != NULL)
     {
         //Load the bootrom
@@ -35,13 +36,16 @@ int main (int argc, char** argv)
         fclose(f);
         Memory.init(cart, bootrom);
         delete[] bootrom;
+        //no need to initialize cpu state if bootrom is present
     }
     else
     {
         //TODO: handle not having a bootrom, initialize ram and registers as the bootrom would etc
         logging::logerr("need a bootrom for now", true);
     }
-    
+    cpu CPU;
+    CPU.initState(state, &Memory);
+    CPU.step();
     /*
     for (ushort i = 0; i < fsize; i++)
     {
@@ -54,5 +58,6 @@ int main (int argc, char** argv)
     */
 
     //cleanup before exit here
+    logging::log("Exited successfully");
     return 0;
 }

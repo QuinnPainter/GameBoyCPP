@@ -6,8 +6,10 @@ class memory
         memory();
         ~memory();
         void init (byte* rom, byte* bootrom = nullptr);
-        void set (ushort address, byte value);
-        byte get (ushort address);
+        void set8 (ushort address, byte value);
+        byte get8 (ushort address);
+        void set16 (ushort address, ushort value);
+        ushort get16 (ushort address);
     private:
         byte* memBytes;
         byte* bootrom;

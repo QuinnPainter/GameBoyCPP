@@ -45,7 +45,7 @@ memory::~memory()
 
 void memory::init(byte* rom, byte* bootrom)
 {
-    memcpy(memory::memBytes, rom, 0x4000);
+    memcpy(memory::memBytes, rom, 0x8000);
     if (bootrom != nullptr)
     {
         memory::bootrom = new byte[256];
@@ -53,7 +53,7 @@ void memory::init(byte* rom, byte* bootrom)
     }
 }
 
-byte memory::get(ushort address)
+byte memory::get8(ushort address)
 {
     if (address <= 0xFF && memory::memBytes[0xFF50] != 1)
     {
@@ -63,7 +63,7 @@ byte memory::get(ushort address)
     return memory::memBytes[fixMemAddress(address)];
 }
 
-void memory::set(ushort address, byte value)
+void memory::set8(ushort address, byte value)
 {
     if (address <= 0xFF && memory::memBytes[0xFF50] != 1)
     {
@@ -74,13 +74,28 @@ void memory::set(ushort address, byte value)
     memory::memBytes[fixMemAddress(address)] = value;
 }
 
+ushort memory::get16(ushort address)
+{
+    return combineBytes(memory::get8(address), memory::get8(address + 1));
+}
+
+void memory::set16(ushort address, ushort value)
+{
+    memory::set8(address, highByte(value));
+    memory::set8(address + 1, lowByte(value));
+}
+
 ushort memory::fixMemAddress(ushort address)
 {
     if (address >= 0xFEA0 && address <= 0xFEFF)
     {
-        logging::logerr(logging::ushortToString(address) + " is a forbidden memory address!");
+        logging::logerr(ushortToString(address) + " is a forbidden memory address!");
         return address;
     }
-    //if (address >= 0xE000)
+    //echo RAM
+    if (address >= 0xE000 && address <= 0xFDFF)
+    {
+        return address - 0x200;
+    }
     return address;
 }
