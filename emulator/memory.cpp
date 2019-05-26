@@ -51,6 +51,8 @@ void memory::init(byte* rom, byte* bootrom)
         memory::bootrom = new byte[256];
         memcpy(memory::bootrom, bootrom, 256);
     }
+    //this area is inaccessible IO stuff - returns FF
+    std::fill(&(memBytes[0xFF4C]), &(memBytes[0xFF80]), 0xFF);
 }
 
 byte memory::get8(ushort address)
@@ -76,13 +78,13 @@ void memory::set8(ushort address, byte value)
 
 ushort memory::get16(ushort address)
 {
-    return combineBytes(memory::get8(address), memory::get8(address + 1));
+    return combineBytes(memory::get8(address + 1), memory::get8(address));
 }
 
 void memory::set16(ushort address, ushort value)
 {
-    memory::set8(address, highByte(value));
-    memory::set8(address + 1, lowByte(value));
+    memory::set8(address + 1, highByte(value));
+    memory::set8(address, lowByte(value));
 }
 
 ushort memory::fixMemAddress(ushort address)

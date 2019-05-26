@@ -17,7 +17,7 @@ std::string byteToString(byte num)
     std::ostringstream ss;
     ss.width(2);
     ss.fill('0');
-    ss << std::hex << std::uppercase << num;
+    ss << std::hex << std::uppercase << (int)num;
     return ss.str();
 }
 
@@ -27,11 +27,11 @@ std::string ushortToString(ushort num)
     std::ostringstream ss;
     ss.width(4);
     ss.fill('0');
-    ss << std::hex << std::uppercase << num;
+    ss << std::hex << std::uppercase << (int)num;
     return ss.str();
 }
 
-//makes 2 bytes into a little-endian short ex. 55 and 9A become 559A
+//makes 2 bytes into a big-endian short ex. 55 and 9A become 559A
 ushort combineBytes(byte b1, byte b2)
 {
     return (((ushort)b1 << 8) | b2);
@@ -56,4 +56,12 @@ byte setBit(byte b, byte index, bool value)
     std::bitset<8> bits = b;
     bits[index] = value;
     return static_cast<byte>(bits.to_ulong());
+}
+
+//returns bit with index from a byte
+//bits go from right to left, 0 to 7
+bool getBit(byte b, byte index)
+{
+    std::bitset<8> bits = b;
+    return bits[index];
 }

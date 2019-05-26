@@ -168,9 +168,9 @@ int main (int argc, char** argv)
         case (0x06): std::cout<<"2MByte (128 banks)\n"; break;
         case (0x07): std::cout<<"4MByte (256 banks)\n"; break;
         case (0x08): std::cout<<"8MByte (512 banks)\n"; break;
-        case (0x52): std::cout<<"1.1MByte (72 banks)\n"; break;
-        case (0x53): std::cout<<"1.2MByte (80 banks)\n"; break;
-        case (0x54): std::cout<<"1.5MByte (96 banks)\n"; break;
+        //case (0x52): std::cout<<"1.1MByte (72 banks)\n"; break;
+        //case (0x53): std::cout<<"1.2MByte (80 banks)\n"; break;
+        //case (0x54): std::cout<<"1.5MByte (96 banks)\n"; break;
         default: std::cout<<"Unknown\n"; break;
     }
     std::cout << "RAM Size: ";

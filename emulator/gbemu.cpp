@@ -21,8 +21,8 @@ int main (int argc, char** argv)
     byte* cart = new byte[fsize];
     fread(cart, fsize, 1, f);
     fclose(f);
-    memory Memory;
-    cpuState state;
+    memory Memory{};
+    cpuState state{};
     if (argv[2] != NULL)
     {
         //Load the bootrom
@@ -45,7 +45,11 @@ int main (int argc, char** argv)
     }
     cpu CPU;
     CPU.initState(state, &Memory);
-    CPU.step();
+    Memory.set8(0xFF50, 1); //disable bootrom for testing
+    for (int i = 0; i < 10; i++)
+    {
+        CPU.step();
+    }
     /*
     for (ushort i = 0; i < fsize; i++)
     {
