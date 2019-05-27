@@ -165,6 +165,74 @@ instrInfo cpu::emulateOp()
         case 0xCE: return cpu::ADC_A_N(secondByte);
 
         case 0x8E: return cpu::ADC_A_HL();
+
+        case 0x90: return cpu::SUB_A_R(&cpu::state.B);
+        case 0x91: return cpu::SUB_A_R(&cpu::state.C);
+        case 0x92: return cpu::SUB_A_R(&cpu::state.D);
+        case 0x93: return cpu::SUB_A_R(&cpu::state.E);
+        case 0x94: return cpu::SUB_A_R(&cpu::state.H);
+        case 0x95: return cpu::SUB_A_R(&cpu::state.L);
+        case 0x97: return cpu::SUB_A_R(&cpu::state.A);
+
+        case 0xD6: return cpu::SUB_A_N(secondByte);
+
+        case 0x96: return cpu::SUB_A_HL();
+
+        case 0x98: return cpu::SBC_A_R(&cpu::state.B);
+        case 0x99: return cpu::SBC_A_R(&cpu::state.C);
+        case 0x9A: return cpu::SBC_A_R(&cpu::state.D);
+        case 0x9B: return cpu::SBC_A_R(&cpu::state.E);
+        case 0x9C: return cpu::SBC_A_R(&cpu::state.H);
+        case 0x9D: return cpu::SBC_A_R(&cpu::state.L);
+        case 0x9F: return cpu::SBC_A_R(&cpu::state.A);
+
+        case 0xDE: return cpu::SBC_A_N(secondByte);
+
+        case 0x9E: return cpu::SBC_A_HL();
+
+        case 0xA0: return cpu::AND_A_R(&cpu::state.B);
+        case 0xA1: return cpu::AND_A_R(&cpu::state.C);
+        case 0xA2: return cpu::AND_A_R(&cpu::state.D);
+        case 0xA3: return cpu::AND_A_R(&cpu::state.E);
+        case 0xA4: return cpu::AND_A_R(&cpu::state.H);
+        case 0xA5: return cpu::AND_A_R(&cpu::state.L);
+        case 0xA7: return cpu::AND_A_R(&cpu::state.A);
+
+        case 0xE6: return cpu::AND_A_N(secondByte);
+
+        case 0xA6: return cpu::AND_A_HL();
+
+        case 0xB0: return cpu::OR_A_R(&cpu::state.B);
+        case 0xB1: return cpu::OR_A_R(&cpu::state.C);
+        case 0xB2: return cpu::OR_A_R(&cpu::state.D);
+        case 0xB3: return cpu::OR_A_R(&cpu::state.E);
+        case 0xB4: return cpu::OR_A_R(&cpu::state.H);
+        case 0xB5: return cpu::OR_A_R(&cpu::state.L);
+        case 0xB7: return cpu::OR_A_R(&cpu::state.A);
+
+        case 0xF6: return cpu::OR_A_N(secondByte);
+
+        case 0xB6: return cpu::OR_A_HL();
+
+        case 0x04: return cpu::INC_R(&cpu::state.B);
+        case 0x0C: return cpu::INC_R(&cpu::state.C);
+        case 0x14: return cpu::INC_R(&cpu::state.D);
+        case 0x1C: return cpu::INC_R(&cpu::state.E);
+        case 0x24: return cpu::INC_R(&cpu::state.H);
+        case 0x2C: return cpu::INC_R(&cpu::state.L);
+        case 0x3C: return cpu::INC_R(&cpu::state.A);
+
+        case 0x34: return cpu::INC_HL();
+
+        case 0x05: return cpu::DEC_R(&cpu::state.B);
+        case 0x0D: return cpu::DEC_R(&cpu::state.C);
+        case 0x15: return cpu::DEC_R(&cpu::state.D);
+        case 0x1D: return cpu::DEC_R(&cpu::state.E);
+        case 0x25: return cpu::DEC_R(&cpu::state.H);
+        case 0x2D: return cpu::DEC_R(&cpu::state.L);
+        case 0x3D: return cpu::DEC_R(&cpu::state.A);
+
+        case 0x35: return cpu::DEC_HL();
         //case 0x00: return cpu::NOP();
         //case 0x08: return cpu::LD_N_SP(combineBytes(secondByte, thirdByte));
         //case 0x09: return cpu::ADD_HL_R(&cpu::state.BC);
@@ -200,91 +268,78 @@ instrInfo cpu::LD_R_R(byte* dstReg, byte* srcReg)
     *dstReg = *srcReg;
     return {1,4};
 }
-
 //Loads given byte into dstReg
 instrInfo cpu::LD_R_N(byte* dstReg, byte n)
 {
     *dstReg = n;
     return {2,8};
 }
-
 //Loads the value at the memory address in HL to dstReg
 instrInfo cpu::LD_R_HL(byte* dstReg)
 {
     *dstReg = cpu::Memory->get8(cpu::state.HL);
     return {1,8};
 }
-
 //Loads srcReg into the memory address in HL
 instrInfo cpu::LD_HL_R(byte* srcReg)
 {
     cpu::Memory->set8(cpu::state.HL, *srcReg);
     return {1,8};
 }
-
 //Loads n into the mrmory address in HL
 instrInfo cpu::LD_HL_N(byte n)
 {
     cpu::Memory->set8(cpu::state.HL, n);
     return {2,12};
 }
-
 //Loads from the memory address in BC into A
 instrInfo cpu::LD_A_BC()
 {
     cpu::state.A = cpu::Memory->get8(cpu::state.BC);
     return {1,8};
 }
-
 //Loads from the memory address in DE into A
 instrInfo cpu::LD_A_DE()
 {
     cpu::state.A = cpu::Memory->get8(cpu::state.DE);
     return {1,8};
 }
-
 //Loads from the memory address (FF00 + C) into A
 instrInfo cpu::LD_A_C()
 {
     cpu::state.A = cpu::Memory->get8(0xFF00 + cpu::state.C);
     return {1,8};
 }
-
 //Copies A into the memory address (FF00 + C)
 instrInfo cpu::LD_C_A()
 {
     cpu::Memory->set8(0xFF00 + cpu::state.C, cpu::state.A);
     return {1,8};
 }
-
 //Loads from the memory address (FF00 + n) into A
 instrInfo cpu::LD_A_N(byte n)
 {
     cpu::state.A = cpu::Memory->get8(0xFF00 + n);
     return {2,12};
 }
-
 //Copies A into the memory address (FF00 + n)
 instrInfo cpu::LD_N_A(byte n)
 {
     cpu::Memory->set8(0xFF00 + n, cpu::state.A);
     return {2,12};
 }
-
 //Loads from the memory address nn into A
 instrInfo cpu::LD_A_NN(ushort nn)
 {
     cpu::state.A = cpu::Memory->get8(nn);
     return {3,16};
 }
-
 //Copies A into the memory address nn
 instrInfo cpu::LD_NN_A(ushort nn)
 {
     cpu::Memory->set8(nn, cpu::state.A);
     return {3,16};
 }
-
 //Loads the memory address in HL into A, and increments HL
 instrInfo cpu::LDI_A_HL()
 {
@@ -292,7 +347,6 @@ instrInfo cpu::LDI_A_HL()
     cpu::state.HL++;
     return {1,8};
 }
-
 //Loads the memory address in HL into A, and decrements HL
 instrInfo cpu::LDD_A_HL()
 {
@@ -300,21 +354,18 @@ instrInfo cpu::LDD_A_HL()
     cpu::state.HL--;
     return {1,8};
 }
-
 //Copies A into the memory address held in BC
 instrInfo cpu::LD_BC_A()
 {
     cpu::Memory->set8(cpu::state.BC, cpu::state.A);
     return {1,8};
 }
-
 //Copies A into the memory address held in DE
 instrInfo cpu::LD_DE_A()
 {
     cpu::Memory->set8(cpu::state.DE, cpu::state.A);
     return {1,8};
 }
-
 //Copies A ino the memory held in HL, and increments HL
 instrInfo cpu::LDI_HL_A()
 {
@@ -322,7 +373,6 @@ instrInfo cpu::LDI_HL_A()
     cpu::state.HL++;
     return {1,8};
 }
-
 //Copies A ino the memory held in HL, and decrements HL
 instrInfo cpu::LDD_HL_A()
 {
@@ -339,14 +389,12 @@ instrInfo cpu::LD_DD_NN(ushort* regPair, ushort nn)
     *regPair = nn;
     return {3,12};
 }
-
 //Loads HL into SP
 instrInfo cpu::LD_SP_HL()
 {
     cpu::state.SP = cpu::state.HL;
     return {1,8};
 }
-
 //Pushes regPair onto the stack
 instrInfo cpu::PUSH_QQ(ushort* regPair)
 {
@@ -355,7 +403,6 @@ instrInfo cpu::PUSH_QQ(ushort* regPair)
     cpu::state.SP -= 2;
     return {1,16};
 }
-
 //Pops from the stack into regPair
 instrInfo cpu::POP_QQ(ushort* regPair)
 {
@@ -363,7 +410,6 @@ instrInfo cpu::POP_QQ(ushort* regPair)
     cpu::state.SP += 2;
     return {1,12};
 }
-
 //The result of (SP + n) is saved in HL
 //Flags: Z = 0, H if carry bit 11, N = 0, C if carry bit 15
 instrInfo cpu::LDHL_SP_N(byte n)
@@ -375,7 +421,6 @@ instrInfo cpu::LDHL_SP_N(byte n)
     cpu::state.HL = cpu::state.SP + n;
     return {2,12};
 }
-
 //Copies SP into memory address nn
 instrInfo cpu::LD_NN_SP(ushort nn)
 {
@@ -396,7 +441,6 @@ instrInfo cpu::ADD_A_R(byte* srcReg)
     cpu::state.A += *srcReg;
     return {1,4};
 }
-
 //Adds n to A and stores in A
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADD_A_N(byte n)
@@ -408,7 +452,6 @@ instrInfo cpu::ADD_A_N(byte n)
     cpu::state.A += n;
     return {2,8};
 }
-
 //Adds contents of memory address in HL to A, stores in A
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADD_A_HL()
@@ -421,60 +464,300 @@ instrInfo cpu::ADD_A_HL()
     cpu::state.A += n;
     return {1,8};
 }
-
 //Adds srcReg to A and the carry flag and stores result in A
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADC_A_R(byte* srcReg)
 {
-    byte result = cpu::state.A + *srcReg + getFlag(C_flag);
+    byte result = cpu::state.A + *srcReg + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(C_flag, ((cpu::state.A + *srcReg + getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + *srcReg&0xF + getFlag(C_flag)) & 0x10) == 0x10);
+    cpu::setFlag(C_flag, ((cpu::state.A + *srcReg + cpu::getFlag(C_flag)) & 0x100) == 0x100);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF + *srcReg&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::state.A = result;
     return {1,4};
 }
-
 //Adds n to A and the carry flag and stores in A
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADC_A_N(byte n)
 {
-    byte result = cpu::state.A + n + getFlag(C_flag);
+    byte result = cpu::state.A + n + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(C_flag, ((cpu::state.A + n + getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + n&0xF + getFlag(C_flag)) & 0x10) == 0x10);
+    cpu::setFlag(C_flag, ((cpu::state.A + n + cpu::getFlag(C_flag)) & 0x100) == 0x100);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF + n&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::state.A = result;
     return {2,8};
 }
-
 //Adds contents of memory address in HL to A + carry flag, stores in A
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADC_A_HL()
 {
     byte hl = cpu::Memory->get8(cpu::state.HL);
-    byte result = cpu::state.A + hl + getFlag(C_flag);
+    byte result = cpu::state.A + hl + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(C_flag, ((cpu::state.A + hl + getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + hl&0xF + getFlag(C_flag)) & 0x10) == 0x10);
+    cpu::setFlag(C_flag, ((cpu::state.A + hl + cpu::getFlag(C_flag)) & 0x100) == 0x100);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF + hl&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::state.A = result;
     return {1,8};
 }
-
 //Subtracts srcReg from A, stores in A
 //Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
-//instrInfo cpu::SUB_A_R(byte* srcReg)
-//{
-//    cpu::setFlag(Z_flag, (byte)(cpu::state.A - *srcReg) == 0);
-//    cpu::setFlag(N_flag, 0);
-//    cpu::setFlag(C_flag, (cpu::state.A - *srcReg) < 0);
-//    cpu::setFlag(H_flag, (cpu::state.A&0xF - *srcReg&0xF) < 0);
-//    cpu::state.A -= *srcReg;
-//    return {1,8};
-//}
-//instrInfo cpu::SUB_A_N(byte n);
-//instrInfo cpu::SUB_A_HL();
+instrInfo cpu::SUB_A_R(byte* srcReg)
+{
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - *srcReg) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - *srcReg) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - *srcReg&0xF) < 0);
+    cpu::state.A -= *srcReg;
+    return {1,4};
+}
+//Subtracts n from A, stores in A
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::SUB_A_N(byte n)
+{
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - n) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - n) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - n&0xF) < 0);
+    cpu::state.A -= n;
+    return {2,8};
+}
+//Subtracts the value held in memory address HL from A, stores in A
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::SUB_A_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - hl) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - hl) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - hl&0xF) < 0);
+    cpu::state.A -= hl;
+    return {1,8};
+}
+//Subtracts (srcReg + carry) from A, stores in A
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::SBC_A_R(byte* srcReg)
+{
+    byte toSub = *srcReg + cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
+    cpu::state.A -= toSub;
+    return {1,4};
+}
+//Subtracts (n + carry) from A, stores in A
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::SBC_A_N(byte n)
+{
+    byte toSub = n + cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
+    cpu::state.A -= toSub;
+    return {2,8};
+}
+//Subtracts ((value in mem addr HL) + carry) from A, stores in A
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::SBC_A_HL()
+{
+    byte toSub = cpu::Memory->get8(cpu::state.HL) + cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
+    cpu::state.A -= toSub;
+    return {1,8};
+}
+//Performs bitwise AND on srcReg and A, stores in A
+//Flags: C = 0, H = 1, N = 0, Z if result is 0
+instrInfo cpu::AND_A_R(byte* srcReg)
+{
+    byte result = cpu::state.A & *srcReg;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Performs bitwise AND on n and A, stores in A
+//Flags: C = 0, H = 1, N = 0, Z if result is 0
+instrInfo cpu::AND_A_N(byte n)
+{
+    byte result = cpu::state.A & n;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {2,8};
+}
+//Performs bitwise AND on (value of memaddress in HL) and A, stores in A
+//Flags: C = 0, H = 1, N = 0, Z if result is 0
+instrInfo cpu::AND_A_HL()
+{
+    byte result = cpu::state.A & cpu::Memory->get8(cpu::state.HL);
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,8};
+}
+//Performs bitwise OR on srcReg and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::OR_A_R(byte* srcReg)
+{
+    byte result = cpu::state.A | *srcReg;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Performs bitwise OR on n and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::OR_A_N(byte n)
+{
+    byte result = cpu::state.A | n;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {2,8};
+}
+//Performs bitwise OR on (value of memaddress in HL) and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::OR_A_HL()
+{
+    byte result = cpu::state.A | cpu::Memory->get8(cpu::state.HL);
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,8};
+}
+//Performs bitwise XOR on srcReg and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::XOR_A_R(byte* srcReg)
+{
+    byte result = cpu::state.A ^ *srcReg;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Performs bitwise XOR on n and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::XOR_A_N(byte n)
+{
+    byte result = cpu::state.A ^ n;
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {2,8};
+}
+//Performs bitwise XOR on (value of memaddress in HL) and A, stores in A
+//Flags: C = 0, H = 0, N = 0, Z if result is 0
+instrInfo cpu::XOR_A_HL()
+{
+    byte result = cpu::state.A ^ cpu::Memory->get8(cpu::state.HL);
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::state.A = result;
+    return {1,8};
+}
+//"Compares" srcReg and A
+//Basically does SUB, but only sets the flags, it doesn't save a result anywhere.
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::CP_A_R(byte* srcReg)
+{
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - *srcReg) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - *srcReg) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - *srcReg&0xF) < 0);
+    return {1,4};
+}
+//"Compares" n and A
+//Basically does SUB, but only sets the flags, it doesn't save a result anywhere.
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::CP_A_N(byte n)
+{
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - n) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - n) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - n&0xF) < 0);
+    return {2,8};
+}
+//"Compares" (value of memaddress in HL) and A
+//Basically does SUB, but only sets the flags, it doesn't save a result anywhere.
+//Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
+instrInfo cpu::CP_A_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    cpu::setFlag(Z_flag, (byte)(cpu::state.A - hl) == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(C_flag, (cpu::state.A - hl) < 0);
+    cpu::setFlag(H_flag, (cpu::state.A&0xF - hl&0xF) < 0);
+    return {1,8};
+}
+
+//Increments srcReg
+//Flags: Z if result it 0, H if carry bit 3, N = 0
+instrInfo cpu::INC_R(byte* srcReg)
+{
+    byte result = *srcReg + 1;
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, ((*srcReg&0xF + 1) & 0x10) == 0x10);
+    *srcReg = result;
+    return {1,4};
+}
+//Increments (value of memaddress in HL)
+//Flags: Z if result it 0, H if carry bit 3, N = 0
+instrInfo cpu::INC_HL()
+{
+    byte result = cpu::Memory->get8(cpu::state.HL) + 1;
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, ((cpu::Memory->get8(cpu::state.HL)&0xF + 1) & 0x10) == 0x10);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {1,12};
+}
+//Decrements srcReg
+//Flags: Z if result it 0, H if carry bit 4, N = 1
+instrInfo cpu::DEC_R(byte* srcReg)
+{
+    byte result = *srcReg - 1;
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, (*srcReg&0xF - 1) < 0);
+    *srcReg = result;
+    return {1,4};
+}
+//Decrements (value of memaddress in HL)
+//Flags: Z if result it 0, H if carry bit 4, N = 1
+instrInfo cpu::DEC_HL()
+{
+    byte result = cpu::Memory->get8(cpu::state.HL) - 1;
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, (cpu::Memory->get8(cpu::state.HL)&0xF - 1) < 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {1,12};
+}
 /*
 //do nothing
 instrInfo cpu::NOP()
