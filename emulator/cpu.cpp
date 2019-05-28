@@ -14,7 +14,7 @@ instrInfo cpu::emulateOp()
     byte secondByte = cpu::Memory->get8(cpu::state.PC + 1);
     byte thirdByte = cpu::Memory->get8(cpu::state.PC + 2);
     logging::log(ushortToString(cpu::state.PC));
-    //look at the first 2 bits
+    //look at the first byte for instruction type
     switch (firstByte)
     {
         case 0x40: return cpu::LD_R_R(&cpu::state.B,&cpu::state.B);
@@ -233,12 +233,13 @@ instrInfo cpu::emulateOp()
         case 0x3D: return cpu::DEC_R(&cpu::state.A);
 
         case 0x35: return cpu::DEC_HL();
-        //case 0x00: return cpu::NOP();
-        //case 0x08: return cpu::LD_N_SP(combineBytes(secondByte, thirdByte));
-        //case 0x09: return cpu::ADD_HL_R(&cpu::state.BC);
-        //case 0x19: return cpu::ADD_HL_R(&cpu::state.DE);
-        //case 0x29: return cpu::ADD_HL_R(&cpu::state.HL);
-        //case 0x39: return cpu::ADD_HL_R(&cpu::state.SP);
+
+        case 0x09: return ADD_HL_SS(&cpu::state.BC);
+        case 0x19: return ADD_HL_SS(&cpu::state.DE);
+        case 0x29: return ADD_HL_SS(&cpu::state.HL);
+        case 0x39: return ADD_HL_SS(&cpu::state.SP);
+
+        case 0xE8: return ADD_SP_E(secondByte);
         default: logging::logerr("Unimplemented instruction: " + byteToString(firstByte)); return instrInfo {1,4};
     }
 }
@@ -758,23 +759,12 @@ instrInfo cpu::DEC_HL()
     cpu::Memory->set8(cpu::state.HL, result);
     return {1,12};
 }
-/*
-//do nothing
-instrInfo cpu::NOP()
-{
-    return {1,4};
-}
 
-//Copies the Stack Pointer into a provided memory address
-instrInfo cpu::LD_N_SP(ushort addr)
-{
-    cpu::Memory->set16(addr, cpu::state.SP);
-    return {3,20};
-}
+// 16 Bit Arithmetic
 
 //Add the given register pair to HL, save result in HL
 //Flags: N = 0, H if carry bit 11,  C if carry bit 15
-instrInfo cpu::ADD_HL_R(ushort* regPair)
+instrInfo cpu::ADD_HL_SS(ushort* regPair)
 {
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((*regPair + cpu::state.HL) & 0x10000) == 0x10000);
@@ -782,4 +772,26 @@ instrInfo cpu::ADD_HL_R(ushort* regPair)
     cpu::state.HL += *regPair;
     return {1,8};
 }
-*/
+//Adds e to SP, stores in SP
+//Flags: N = 0, Z = 0, H if carry bit 11, C if carry bit 15
+instrInfo cpu::ADD_SP_E(byte e)
+{
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, 0);
+    cpu::setFlag(C_flag, ((e + cpu::state.SP) & 0x10000) == 0x10000);
+    cpu::setFlag(H_flag, ((e + cpu::state.SP&0xFFF) & 0x1000) == 0x1000);
+    cpu::state.HL += e;
+    return {2,16};
+}
+//Increment regPair
+instrInfo cpu::INC_SS(ushort* regPair)
+{
+    *regPair += 1;
+    return {1,8};
+}
+//Decrement regPair
+instrInfo cpu::DEC_SS(ushort* regPair)
+{
+    *regPair -= 1;
+    return {1,8};
+}

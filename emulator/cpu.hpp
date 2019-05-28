@@ -124,9 +124,8 @@ class cpu
         instrInfo INC_HL();
         instrInfo DEC_R(byte* srcReg);
         instrInfo DEC_HL();
-        //instrInfo NOP();
-        //instrInfo LD_N_SP(ushort addr);
-        //instrInfo LD_R_N(ushort* regPair, ushort value);
-        //instrInfo ADD_HL_R(ushort* regPair);
-        //instrInfo LD_R_A();
+        instrInfo ADD_HL_SS(ushort* regPair);
+        instrInfo ADD_SP_E(byte e);
+        instrInfo INC_SS(ushort* regPair);
+        instrInfo DEC_SS(ushort* regPair);
 };
