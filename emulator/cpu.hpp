@@ -6,6 +6,7 @@ struct instrInfo
 {
     byte numBytes;  //the length of the instruction
     byte numCycles; //the number of cycles the instruction takes to execute
+    bool incPC = true; //do we increase the PC after the instruction? for jumps, this is false
 };
 
 enum flags
@@ -56,8 +57,11 @@ struct cpuState
         };
         ushort AF;
     };
-    ushort PC;
-    ushort SP;
+    ushort PC; //program counter
+    ushort SP; //stack pointer
+    bool IME;  //interrupt enable flag
+    bool HALTED; //is CPU halted?  (halts are ended by an interrupt)
+    bool STOPPED;//is CPU stopped? (stops are ended by a button press)
 };
 
 class cpu
@@ -128,4 +132,25 @@ class cpu
         instrInfo ADD_SP_E(byte e);
         instrInfo INC_SS(ushort* regPair);
         instrInfo DEC_SS(ushort* regPair);
+        //rotate shift and bit go here
+        instrInfo JP_NN(ushort dest);
+        instrInfo JP_CC_NN(bool condition, ushort dest);
+        instrInfo JR_E(byte dest);
+        instrInfo JR_CC_E(bool condition, byte dest);
+        instrInfo JP_HL();
+        instrInfo CALL_NN(ushort dest);
+        instrInfo CALL_CC_NN(bool condition, ushort dest);
+        instrInfo RET();
+        instrInfo RETI();
+        instrInfo RET_CC(bool condition);
+        instrInfo RST(ushort dest);
+        instrInfo DAA();
+        instrInfo CPL();
+        instrInfo NOP();
+        instrInfo CCF();
+        instrInfo SCF();
+        instrInfo DI();
+        instrInfo EI();
+        instrInfo HALT();
+        instrInfo STOP();
 };

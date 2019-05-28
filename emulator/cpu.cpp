@@ -234,12 +234,80 @@ instrInfo cpu::emulateOp()
 
         case 0x35: return cpu::DEC_HL();
 
-        case 0x09: return ADD_HL_SS(&cpu::state.BC);
-        case 0x19: return ADD_HL_SS(&cpu::state.DE);
-        case 0x29: return ADD_HL_SS(&cpu::state.HL);
-        case 0x39: return ADD_HL_SS(&cpu::state.SP);
+        case 0x09: return cpu::ADD_HL_SS(&cpu::state.BC);
+        case 0x19: return cpu::ADD_HL_SS(&cpu::state.DE);
+        case 0x29: return cpu::ADD_HL_SS(&cpu::state.HL);
+        case 0x39: return cpu::ADD_HL_SS(&cpu::state.SP);
 
-        case 0xE8: return ADD_SP_E(secondByte);
+        case 0xE8: return cpu::ADD_SP_E(secondByte);
+        
+        case 0xC3: return cpu::JP_NN(combineBytes(thirdByte, secondByte));
+
+        case 0xC2: return cpu::JP_CC_NN(cpu::getFlag(Z_flag) == 0, combineBytes(thirdByte, secondByte));
+        case 0xCA: return cpu::JP_CC_NN(cpu::getFlag(Z_flag) == 1, combineBytes(thirdByte, secondByte));
+        case 0xD2: return cpu::JP_CC_NN(cpu::getFlag(C_flag) == 0, combineBytes(thirdByte, secondByte));
+        case 0xDA: return cpu::JP_CC_NN(cpu::getFlag(C_flag) == 1, combineBytes(thirdByte, secondByte));
+
+        case 0x18: return cpu::JR_E(secondByte);
+
+        case 0x20: return cpu::JR_CC_E(cpu::getFlag(Z_flag) == 0, secondByte);
+        case 0x28: return cpu::JR_CC_E(cpu::getFlag(Z_flag) == 1, secondByte);
+        case 0x30: return cpu::JR_CC_E(cpu::getFlag(C_flag) == 0, secondByte);
+        case 0x38: return cpu::JR_CC_E(cpu::getFlag(C_flag) == 1, secondByte);
+
+        case 0xE9: return cpu::JP_HL();
+
+        case 0xCD: return cpu::CALL_NN(combineBytes(thirdByte, secondByte));
+
+        case 0xC4: return cpu::CALL_CC_NN(cpu::getFlag(Z_flag) == 0, combineBytes(thirdByte, secondByte));
+        case 0xCC: return cpu::CALL_CC_NN(cpu::getFlag(Z_flag) == 1, combineBytes(thirdByte, secondByte));
+        case 0xD4: return cpu::CALL_CC_NN(cpu::getFlag(C_flag) == 0, combineBytes(thirdByte, secondByte));
+        case 0xDC: return cpu::CALL_CC_NN(cpu::getFlag(C_flag) == 1, combineBytes(thirdByte, secondByte));
+
+        case 0xC9: return cpu::RET();
+
+        case 0xD9: return cpu::RETI();
+
+        case 0xC0: return cpu::RET_CC(cpu::getFlag(Z_flag) == 0);
+        case 0xC8: return cpu::RET_CC(cpu::getFlag(Z_flag) == 1);
+        case 0xD0: return cpu::RET_CC(cpu::getFlag(C_flag) == 0);
+        case 0xD8: return cpu::RET_CC(cpu::getFlag(C_flag) == 1);
+
+        case 0xC7: return cpu::RST(0x0000);
+        case 0xCF: return cpu::RST(0x0008);
+        case 0xD7: return cpu::RST(0x0010);
+        case 0xDF: return cpu::RST(0x0018);
+        case 0xE7: return cpu::RST(0x0020);
+        case 0xEF: return cpu::RST(0x0028);
+        case 0xF7: return cpu::RST(0x0030);
+        case 0xFF: return cpu::RST(0x0038);
+
+        case 0x27: return cpu::DAA();
+
+        case 0x2F: return cpu::CPL();
+
+        case 0x00: return cpu::NOP();
+
+        case 0x3F: return cpu::CCF();
+
+        case 0x37: return cpu::SCF();
+
+        case 0xF3: return cpu::DI();
+
+        case 0xFB: return cpu::EI();
+
+        case 0x76: return cpu::HALT();
+
+        case 0x10: return cpu::STOP();
+
+        case 0xCB:
+            switch (secondByte)
+            {
+
+            }
+        case 0xD3: case 0xE3: case 0xE4: case 0xF4: case 0xDB: case 0xDD: case 0xEB: case 0xEC: case 0xED: case 0xFC: case 0xFD: 
+            logging::logerr("Illegal instruction: " + byteToString(firstByte));
+            return instrInfo {1,4};
         default: logging::logerr("Unimplemented instruction: " + byteToString(firstByte)); return instrInfo {1,4};
     }
 }
@@ -247,7 +315,10 @@ instrInfo cpu::emulateOp()
 void cpu::step()
 {
     instrInfo info = cpu::emulateOp();
-    cpu::state.PC += info.numBytes;
+    if (info.incPC)
+    {
+        cpu::state.PC += info.numBytes;
+    }
 }
 
 void cpu::setFlag(byte flag, bool value)
@@ -409,6 +480,7 @@ instrInfo cpu::POP_QQ(ushort* regPair)
 {
     *regPair = combineBytes(cpu::Memory->get8(cpu::state.SP + 1), cpu::Memory->get8(cpu::state.SP));
     cpu::state.SP += 2;
+    cpu::state.F &= 0xF0; //just in case F was changed, make sure last 4 bits are 0
     return {1,12};
 }
 //The result of (SP + n) is saved in HL
@@ -794,4 +866,185 @@ instrInfo cpu::DEC_SS(ushort* regPair)
 {
     *regPair -= 1;
     return {1,8};
+}
+
+// Rotate Shift Instructions
+
+// Bit Operations
+
+// Jump Instructions
+
+//Sets the program counter to dest
+instrInfo cpu::JP_NN(ushort dest)
+{
+    cpu::state.PC = dest;
+    return {3,16,false};
+}
+
+//Sets program counter to dest if condition is true
+instrInfo cpu::JP_CC_NN(bool condition, ushort dest)
+{
+    if (condition)
+    {
+        cpu::state.PC = dest;
+        return {3,16,false};
+    }
+    return {3,12,true};
+}
+//Jumps a signed amount relative to the memory address after the instruction
+instrInfo cpu::JR_E(byte dest)
+{
+    sbyte relativeDest = static_cast<sbyte>(dest);
+    cpu::state.PC = cpu::state.PC + 2 + relativeDest;
+    return {2,12,false};
+}
+//Jumps a signed amount relative to the memory address after the instruction if condition is true
+instrInfo cpu::JR_CC_E(bool condition, byte dest)
+{
+    if (condition)
+    {
+        sbyte relativeDest = static_cast<sbyte>(dest);
+        cpu::state.PC = cpu::state.PC + 2 + relativeDest;
+        return {2,12,false};
+    }
+    return {2,8,true};
+}
+//Jumps to the memory address in HL
+instrInfo cpu::JP_HL()
+{
+    cpu::state.PC = cpu::state.HL;
+    return {1,4,false};
+}
+
+// Call and Return Instructions
+
+//Jumps to subroutine at dest, puts address after the CALL on the stack
+instrInfo cpu::CALL_NN(ushort dest)
+{
+    cpu::state.SP -= 2;
+    cpu::Memory->set16(cpu::state.SP, cpu::state.PC + 3);
+    cpu::state.PC = dest;
+    return {3, 24, false};
+}
+//Jumps to subroutine at dest, puts address after the CALL on the stack (if condition is true)
+instrInfo cpu::CALL_CC_NN(bool condition, ushort dest)
+{
+    if (condition)
+    {
+        return cpu::CALL_NN(dest);
+    }
+    return {3,12, true};
+}
+
+//Pops the return address from the stack and sets the PC to that.
+instrInfo cpu::RET()
+{
+    cpu::state.PC = cpu::Memory->get16(cpu::state.SP);
+    cpu::state.SP += 2;
+    return {1,16};
+}
+//Enables interrupts and returns. Same as doing EI and RET but only takes as many cycles as doing RET
+instrInfo cpu::RETI()
+{
+    cpu::EI();
+    return cpu::RET();
+}
+//Returns if condition is true.
+instrInfo cpu::RET_CC(bool condition)
+{
+    if (condition)
+    {
+        //this one takes 4 additional cycles
+        instrInfo i = cpu::RET();
+        i.numCycles += 4;
+        return i;
+    }
+    return {1,8};
+}
+//Similar to CALL, but goes to predefined spots in page 0 memory
+instrInfo cpu::RST(ushort dest)
+{
+    cpu::state.SP -= 2;
+    cpu::Memory->set16(cpu::state.SP, cpu::state.PC + 1);
+    cpu::state.PC = dest;
+    return {1, 16, false};
+}
+
+// General Purpose Arithmetic & CPU Control
+
+//Something about BCD values? This one is a mystery. Copied the code for it from https://forums.nesdev.com/viewtopic.php?f=20&t=15944
+//Flags: ?????
+instrInfo cpu::DAA()
+{
+    byte a = cpu::state.A;
+    if (!cpu::getFlag(N_flag))
+    {  // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+        if (cpu::getFlag(C_flag) || a > 0x99) { a += 0x60; cpu::setFlag(C_flag, 1); }
+        if (cpu::getFlag(H_flag) || (a & 0x0f) > 0x09) { a += 0x6; }
+    } 
+    else // after a subtraction, only adjust if (half-)carry occurred
+    {
+        if (cpu::getFlag(C_flag)) { a -= 0x60; }
+        if (cpu::getFlag(H_flag)) { a -= 0x6; }
+    }
+    cpu::setFlag(Z_flag, a == 0);
+    cpu::setFlag(H_flag, 0);
+    cpu::state.A = a;
+    return {1,4};
+}
+//Bit-flips A, stores in A
+//Flags: H = 1, N = 1
+instrInfo cpu::CPL()
+{
+    cpu::state.A = ~cpu::state.A;
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 1);
+    return {1,4};
+}
+//does nothing
+instrInfo cpu::NOP()
+{
+    return {1,4};
+}
+//Flips the carry flag
+//Flags: C = ~C, H = 0, N = 0
+instrInfo cpu::CCF()
+{
+    cpu::setFlag(C_flag, !cpu::getFlag(C_flag));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    return {1,4};
+}
+//Sets the carry flag to 1
+//Flags: C = 1, H = 0, N = 0
+instrInfo cpu::SCF()
+{
+    cpu::setFlag(C_flag, 1);
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    return {1,4};
+}
+//Disables master interrupt flag
+instrInfo cpu::DI()
+{
+    cpu::state.IME = 0;
+    return {1,4};
+}
+//Enables master interrupt flag
+instrInfo cpu::EI()
+{
+    cpu::state.IME = 1;
+    return {1,4};
+}
+//Halts the CPU. Interrupts pull it back into normal operation.
+instrInfo cpu::HALT()
+{
+    cpu::state.STOPPED = true;
+    return {1,4};
+}
+//Stops the CPU. A button press pulls it back into normal operation.
+instrInfo cpu::STOP()
+{
+    cpu::state.HALTED = true;
+    return {1,4};
 }

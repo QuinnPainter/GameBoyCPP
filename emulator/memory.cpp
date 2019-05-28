@@ -73,6 +73,10 @@ void memory::set8(ushort address, byte value)
         logging::logerr("Can't set the bootrom!");
         return;
     }
+    if (address == 0xFF01) //serial port / link cable
+    {
+        std::cout << value;
+    }
     memory::memBytes[fixMemAddress(address)] = value;
 }
 

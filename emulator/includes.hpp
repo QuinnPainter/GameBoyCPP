@@ -8,6 +8,7 @@
 #include <algorithm>
 
 typedef unsigned char byte;
+typedef signed char sbyte;
 typedef unsigned short ushort;
 
 #include "helpers.hpp"

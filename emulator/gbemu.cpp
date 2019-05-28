@@ -45,8 +45,8 @@ int main (int argc, char** argv)
     }
     cpu CPU;
     CPU.initState(state, &Memory);
-    Memory.set8(0xFF50, 1); //disable bootrom for testing
-    for (int i = 0; i < 10; i++)
+    //Memory.set8(0xFF50, 1); //disable bootrom for testing
+    while(true)
     {
         CPU.step();
     }
