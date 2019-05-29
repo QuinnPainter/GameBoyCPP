@@ -132,7 +132,6 @@ class cpu
         instrInfo ADD_SP_E(byte e);
         instrInfo INC_SS(ushort* regPair);
         instrInfo DEC_SS(ushort* regPair);
-        //rotate shift and bit go here
         instrInfo JP_NN(ushort dest);
         instrInfo JP_CC_NN(bool condition, ushort dest);
         instrInfo JR_E(byte dest);
@@ -153,4 +152,26 @@ class cpu
         instrInfo EI();
         instrInfo HALT();
         instrInfo STOP();
+        instrInfo RLC_R(byte* srcReg);
+        instrInfo RLC_HL();
+        instrInfo RL_R(byte* srcReg);
+        instrInfo RL_HL();
+        instrInfo RRC_R(byte* srcReg);
+        instrInfo RRC_HL();
+        instrInfo RR_R(byte* srcReg);
+        instrInfo RR_HL();
+        instrInfo SLA_R(byte* srcReg);
+        instrInfo SLA_HL();
+        instrInfo SRA_R(byte* srcReg);
+        instrInfo SRA_HL();
+        instrInfo SRL_R(byte* srcReg);
+        instrInfo SRL_HL();
+        instrInfo SWAP_R(byte* srcReg);
+        instrInfo SWAP_HL();
+        instrInfo BIT_B_R(byte bitIndex, byte* srcReg);
+        instrInfo BIT_B_HL(byte bitIndex);
+        instrInfo SET_B_R(byte bitIndex, byte* srcReg);
+        instrInfo SET_B_HL(byte bitIndex);
+        instrInfo RES_B_R(byte bitIndex, byte* srcReg);
+        instrInfo RES_B_HL(byte bitIndex);
 };

@@ -303,12 +303,290 @@ instrInfo cpu::emulateOp()
         case 0xCB:
             switch (secondByte)
             {
+                case 0x00: return cpu::RLC_R(&cpu::state.B);
+                case 0x01: return cpu::RLC_R(&cpu::state.C);
+                case 0x02: return cpu::RLC_R(&cpu::state.D);
+                case 0x03: return cpu::RLC_R(&cpu::state.E);
+                case 0x04: return cpu::RLC_R(&cpu::state.H);
+                case 0x05: return cpu::RLC_R(&cpu::state.L);
+                case 0x07: return cpu::RLC_R(&cpu::state.A);
 
+                case 0x06: return cpu::RLC_HL();
+
+                case 0x10: return cpu::RL_R(&cpu::state.B);
+                case 0x11: return cpu::RL_R(&cpu::state.C);
+                case 0x12: return cpu::RL_R(&cpu::state.D);
+                case 0x13: return cpu::RL_R(&cpu::state.E);
+                case 0x14: return cpu::RL_R(&cpu::state.H);
+                case 0x15: return cpu::RL_R(&cpu::state.L);
+                case 0x17: return cpu::RL_R(&cpu::state.A);
+                
+                case 0x16: return cpu::RL_HL();
+
+                case 0x08: return cpu::RRC_R(&cpu::state.B);
+                case 0x09: return cpu::RRC_R(&cpu::state.C);
+                case 0x0A: return cpu::RRC_R(&cpu::state.D);
+                case 0x0B: return cpu::RRC_R(&cpu::state.E);
+                case 0x0C: return cpu::RRC_R(&cpu::state.H);
+                case 0x0D: return cpu::RRC_R(&cpu::state.L);
+                case 0x0F: return cpu::RRC_R(&cpu::state.A);
+
+                case 0x0E: return cpu::RRC_HL();
+
+                case 0x18: return cpu::RR_R(&cpu::state.B);
+                case 0x19: return cpu::RR_R(&cpu::state.C);
+                case 0x1A: return cpu::RR_R(&cpu::state.D);
+                case 0x1B: return cpu::RR_R(&cpu::state.E);
+                case 0x1C: return cpu::RR_R(&cpu::state.H);
+                case 0x1D: return cpu::RR_R(&cpu::state.L);
+                case 0x1F: return cpu::RR_R(&cpu::state.A);
+
+                case 0x1E: return cpu::RR_HL();
+                
+                case 0x20: return cpu::SLA_R(&cpu::state.B);
+                case 0x21: return cpu::SLA_R(&cpu::state.C);
+                case 0x22: return cpu::SLA_R(&cpu::state.D);
+                case 0x23: return cpu::SLA_R(&cpu::state.E);
+                case 0x24: return cpu::SLA_R(&cpu::state.H);
+                case 0x25: return cpu::SLA_R(&cpu::state.L);
+                case 0x27: return cpu::SLA_R(&cpu::state.A);
+
+                case 0x26: return cpu::SLA_HL();
+
+                case 0x28: return cpu::SRA_R(&cpu::state.B);
+                case 0x29: return cpu::SRA_R(&cpu::state.C);
+                case 0x2A: return cpu::SRA_R(&cpu::state.D);
+                case 0x2B: return cpu::SRA_R(&cpu::state.E);
+                case 0x2C: return cpu::SRA_R(&cpu::state.H);
+                case 0x2D: return cpu::SRA_R(&cpu::state.L);
+                case 0x2F: return cpu::SRA_R(&cpu::state.A);
+                
+                case 0x2E: return cpu::SRA_HL();
+
+                case 0x38: return cpu::SRL_R(&cpu::state.B);
+                case 0x39: return cpu::SRL_R(&cpu::state.C);
+                case 0x3A: return cpu::SRL_R(&cpu::state.D);
+                case 0x3B: return cpu::SRL_R(&cpu::state.E);
+                case 0x3C: return cpu::SRL_R(&cpu::state.H);
+                case 0x3D: return cpu::SRL_R(&cpu::state.L);
+                case 0x3F: return cpu::SRL_R(&cpu::state.A);
+
+                case 0x3E: return cpu::SRL_HL();
+                
+                case 0x30: return cpu::SWAP_R(&cpu::state.B);
+                case 0x31: return cpu::SWAP_R(&cpu::state.C);
+                case 0x32: return cpu::SWAP_R(&cpu::state.D);
+                case 0x33: return cpu::SWAP_R(&cpu::state.E);
+                case 0x34: return cpu::SWAP_R(&cpu::state.H);
+                case 0x35: return cpu::SWAP_R(&cpu::state.L);
+                case 0x37: return cpu::SWAP_R(&cpu::state.A);
+
+                case 0x36: return cpu::SWAP_HL();
+
+                case 0x40: return cpu::BIT_B_R(0, &cpu::state.B);
+                case 0x41: return cpu::BIT_B_R(0, &cpu::state.C);
+                case 0x42: return cpu::BIT_B_R(0, &cpu::state.D);
+                case 0x43: return cpu::BIT_B_R(0, &cpu::state.E);
+                case 0x44: return cpu::BIT_B_R(0, &cpu::state.H);
+                case 0x45: return cpu::BIT_B_R(0, &cpu::state.L);
+                case 0x47: return cpu::BIT_B_R(0, &cpu::state.A);
+                case 0x48: return cpu::BIT_B_R(1, &cpu::state.B);
+                case 0x49: return cpu::BIT_B_R(1, &cpu::state.C);
+                case 0x4A: return cpu::BIT_B_R(1, &cpu::state.D);
+                case 0x4B: return cpu::BIT_B_R(1, &cpu::state.E);
+                case 0x4C: return cpu::BIT_B_R(1, &cpu::state.H);
+                case 0x4D: return cpu::BIT_B_R(1, &cpu::state.L);
+                case 0x4F: return cpu::BIT_B_R(1, &cpu::state.A);
+                case 0x50: return cpu::BIT_B_R(2, &cpu::state.B);
+                case 0x51: return cpu::BIT_B_R(2, &cpu::state.C);
+                case 0x52: return cpu::BIT_B_R(2, &cpu::state.D);
+                case 0x53: return cpu::BIT_B_R(2, &cpu::state.E);
+                case 0x54: return cpu::BIT_B_R(2, &cpu::state.H);
+                case 0x55: return cpu::BIT_B_R(2, &cpu::state.L);
+                case 0x57: return cpu::BIT_B_R(2, &cpu::state.A);
+                case 0x58: return cpu::BIT_B_R(3, &cpu::state.B);
+                case 0x59: return cpu::BIT_B_R(3, &cpu::state.C);
+                case 0x5A: return cpu::BIT_B_R(3, &cpu::state.D);
+                case 0x5B: return cpu::BIT_B_R(3, &cpu::state.E);
+                case 0x5C: return cpu::BIT_B_R(3, &cpu::state.H);
+                case 0x5D: return cpu::BIT_B_R(3, &cpu::state.L);
+                case 0x5F: return cpu::BIT_B_R(3, &cpu::state.A);
+                case 0x60: return cpu::BIT_B_R(4, &cpu::state.B);
+                case 0x61: return cpu::BIT_B_R(4, &cpu::state.C);
+                case 0x62: return cpu::BIT_B_R(4, &cpu::state.D);
+                case 0x63: return cpu::BIT_B_R(4, &cpu::state.E);
+                case 0x64: return cpu::BIT_B_R(4, &cpu::state.H);
+                case 0x65: return cpu::BIT_B_R(4, &cpu::state.L);
+                case 0x67: return cpu::BIT_B_R(4, &cpu::state.A);
+                case 0x68: return cpu::BIT_B_R(5, &cpu::state.B);
+                case 0x69: return cpu::BIT_B_R(5, &cpu::state.C);
+                case 0x6A: return cpu::BIT_B_R(5, &cpu::state.D);
+                case 0x6B: return cpu::BIT_B_R(5, &cpu::state.E);
+                case 0x6C: return cpu::BIT_B_R(5, &cpu::state.H);
+                case 0x6D: return cpu::BIT_B_R(5, &cpu::state.L);
+                case 0x6F: return cpu::BIT_B_R(5, &cpu::state.A);
+                case 0x70: return cpu::BIT_B_R(6, &cpu::state.B);
+                case 0x71: return cpu::BIT_B_R(6, &cpu::state.C);
+                case 0x72: return cpu::BIT_B_R(6, &cpu::state.D);
+                case 0x73: return cpu::BIT_B_R(6, &cpu::state.E);
+                case 0x74: return cpu::BIT_B_R(6, &cpu::state.H);
+                case 0x75: return cpu::BIT_B_R(6, &cpu::state.L);
+                case 0x77: return cpu::BIT_B_R(6, &cpu::state.A);
+                case 0x78: return cpu::BIT_B_R(7, &cpu::state.B);
+                case 0x79: return cpu::BIT_B_R(7, &cpu::state.C);
+                case 0x7A: return cpu::BIT_B_R(7, &cpu::state.D);
+                case 0x7B: return cpu::BIT_B_R(7, &cpu::state.E);
+                case 0x7C: return cpu::BIT_B_R(7, &cpu::state.H);
+                case 0x7D: return cpu::BIT_B_R(7, &cpu::state.L);
+                case 0x7F: return cpu::BIT_B_R(7, &cpu::state.A);
+
+                case 0x46: return cpu::BIT_B_HL(0);
+                case 0x4E: return cpu::BIT_B_HL(1);
+                case 0x56: return cpu::BIT_B_HL(2);
+                case 0x5E: return cpu::BIT_B_HL(3);
+                case 0x66: return cpu::BIT_B_HL(4);
+                case 0x6E: return cpu::BIT_B_HL(5);
+                case 0x76: return cpu::BIT_B_HL(6);
+                case 0x7E: return cpu::BIT_B_HL(7);
+
+                case 0xC0: return cpu::SET_B_R(0, &cpu::state.B);
+                case 0xC1: return cpu::SET_B_R(0, &cpu::state.C);
+                case 0xC2: return cpu::SET_B_R(0, &cpu::state.D);
+                case 0xC3: return cpu::SET_B_R(0, &cpu::state.E);
+                case 0xC4: return cpu::SET_B_R(0, &cpu::state.H);
+                case 0xC5: return cpu::SET_B_R(0, &cpu::state.L);
+                case 0xC7: return cpu::SET_B_R(0, &cpu::state.A);
+                case 0xC8: return cpu::SET_B_R(1, &cpu::state.B);
+                case 0xC9: return cpu::SET_B_R(1, &cpu::state.C);
+                case 0xCA: return cpu::SET_B_R(1, &cpu::state.D);
+                case 0xCB: return cpu::SET_B_R(1, &cpu::state.E);
+                case 0xCC: return cpu::SET_B_R(1, &cpu::state.H);
+                case 0xCD: return cpu::SET_B_R(1, &cpu::state.L);
+                case 0xCF: return cpu::SET_B_R(1, &cpu::state.A);
+                case 0xD0: return cpu::SET_B_R(2, &cpu::state.B);
+                case 0xD1: return cpu::SET_B_R(2, &cpu::state.C);
+                case 0xD2: return cpu::SET_B_R(2, &cpu::state.D);
+                case 0xD3: return cpu::SET_B_R(2, &cpu::state.E);
+                case 0xD4: return cpu::SET_B_R(2, &cpu::state.H);
+                case 0xD5: return cpu::SET_B_R(2, &cpu::state.L);
+                case 0xD7: return cpu::SET_B_R(2, &cpu::state.A);
+                case 0xD8: return cpu::SET_B_R(3, &cpu::state.B);
+                case 0xD9: return cpu::SET_B_R(3, &cpu::state.C);
+                case 0xDA: return cpu::SET_B_R(3, &cpu::state.D);
+                case 0xDB: return cpu::SET_B_R(3, &cpu::state.E);
+                case 0xDC: return cpu::SET_B_R(3, &cpu::state.H);
+                case 0xDD: return cpu::SET_B_R(3, &cpu::state.L);
+                case 0xDF: return cpu::SET_B_R(3, &cpu::state.A);
+                case 0xE0: return cpu::SET_B_R(4, &cpu::state.B);
+                case 0xE1: return cpu::SET_B_R(4, &cpu::state.C);
+                case 0xE2: return cpu::SET_B_R(4, &cpu::state.D);
+                case 0xE3: return cpu::SET_B_R(4, &cpu::state.E);
+                case 0xE4: return cpu::SET_B_R(4, &cpu::state.H);
+                case 0xE5: return cpu::SET_B_R(4, &cpu::state.L);
+                case 0xE7: return cpu::SET_B_R(4, &cpu::state.A);
+                case 0xE8: return cpu::SET_B_R(5, &cpu::state.B);
+                case 0xE9: return cpu::SET_B_R(5, &cpu::state.C);
+                case 0xEA: return cpu::SET_B_R(5, &cpu::state.D);
+                case 0xEB: return cpu::SET_B_R(5, &cpu::state.E);
+                case 0xEC: return cpu::SET_B_R(5, &cpu::state.H);
+                case 0xED: return cpu::SET_B_R(5, &cpu::state.L);
+                case 0xEF: return cpu::SET_B_R(5, &cpu::state.A);
+                case 0xF0: return cpu::SET_B_R(6, &cpu::state.B);
+                case 0xF1: return cpu::SET_B_R(6, &cpu::state.C);
+                case 0xF2: return cpu::SET_B_R(6, &cpu::state.D);
+                case 0xF3: return cpu::SET_B_R(6, &cpu::state.E);
+                case 0xF4: return cpu::SET_B_R(6, &cpu::state.H);
+                case 0xF5: return cpu::SET_B_R(6, &cpu::state.L);
+                case 0xF7: return cpu::SET_B_R(6, &cpu::state.A);
+                case 0xF8: return cpu::SET_B_R(7, &cpu::state.B);
+                case 0xF9: return cpu::SET_B_R(7, &cpu::state.C);
+                case 0xFA: return cpu::SET_B_R(7, &cpu::state.D);
+                case 0xFB: return cpu::SET_B_R(7, &cpu::state.E);
+                case 0xFC: return cpu::SET_B_R(7, &cpu::state.H);
+                case 0xFD: return cpu::SET_B_R(7, &cpu::state.L);
+                case 0xFF: return cpu::SET_B_R(7, &cpu::state.A);
+
+                case 0xC6: return cpu::SET_B_HL(0);
+                case 0xCE: return cpu::SET_B_HL(1);
+                case 0xD6: return cpu::SET_B_HL(2);
+                case 0xDE: return cpu::SET_B_HL(3);
+                case 0xE6: return cpu::SET_B_HL(4);
+                case 0xEE: return cpu::SET_B_HL(5);
+                case 0xF6: return cpu::SET_B_HL(6);
+                case 0xFE: return cpu::SET_B_HL(7);
+
+                case 0x80: return cpu::RES_B_R(0, &cpu::state.B);
+                case 0x81: return cpu::RES_B_R(0, &cpu::state.C);
+                case 0x82: return cpu::RES_B_R(0, &cpu::state.D);
+                case 0x83: return cpu::RES_B_R(0, &cpu::state.E);
+                case 0x84: return cpu::RES_B_R(0, &cpu::state.H);
+                case 0x85: return cpu::RES_B_R(0, &cpu::state.L);
+                case 0x87: return cpu::RES_B_R(0, &cpu::state.A);
+                case 0x88: return cpu::RES_B_R(1, &cpu::state.B);
+                case 0x89: return cpu::RES_B_R(1, &cpu::state.C);
+                case 0x8A: return cpu::RES_B_R(1, &cpu::state.D);
+                case 0x8B: return cpu::RES_B_R(1, &cpu::state.E);
+                case 0x8C: return cpu::RES_B_R(1, &cpu::state.H);
+                case 0x8D: return cpu::RES_B_R(1, &cpu::state.L);
+                case 0x8F: return cpu::RES_B_R(1, &cpu::state.A);
+                case 0x90: return cpu::RES_B_R(2, &cpu::state.B);
+                case 0x91: return cpu::RES_B_R(2, &cpu::state.C);
+                case 0x92: return cpu::RES_B_R(2, &cpu::state.D);
+                case 0x93: return cpu::RES_B_R(2, &cpu::state.E);
+                case 0x94: return cpu::RES_B_R(2, &cpu::state.H);
+                case 0x95: return cpu::RES_B_R(2, &cpu::state.L);
+                case 0x97: return cpu::RES_B_R(2, &cpu::state.A);
+                case 0x98: return cpu::RES_B_R(3, &cpu::state.B);
+                case 0x99: return cpu::RES_B_R(3, &cpu::state.C);
+                case 0x9A: return cpu::RES_B_R(3, &cpu::state.D);
+                case 0x9B: return cpu::RES_B_R(3, &cpu::state.E);
+                case 0x9C: return cpu::RES_B_R(3, &cpu::state.H);
+                case 0x9D: return cpu::RES_B_R(3, &cpu::state.L);
+                case 0x9F: return cpu::RES_B_R(3, &cpu::state.A);
+                case 0xA0: return cpu::RES_B_R(4, &cpu::state.B);
+                case 0xA1: return cpu::RES_B_R(4, &cpu::state.C);
+                case 0xA2: return cpu::RES_B_R(4, &cpu::state.D);
+                case 0xA3: return cpu::RES_B_R(4, &cpu::state.E);
+                case 0xA4: return cpu::RES_B_R(4, &cpu::state.H);
+                case 0xA5: return cpu::RES_B_R(4, &cpu::state.L);
+                case 0xA7: return cpu::RES_B_R(4, &cpu::state.A);
+                case 0xA8: return cpu::RES_B_R(5, &cpu::state.B);
+                case 0xA9: return cpu::RES_B_R(5, &cpu::state.C);
+                case 0xAA: return cpu::RES_B_R(5, &cpu::state.D);
+                case 0xAB: return cpu::RES_B_R(5, &cpu::state.E);
+                case 0xAC: return cpu::RES_B_R(5, &cpu::state.H);
+                case 0xAD: return cpu::RES_B_R(5, &cpu::state.L);
+                case 0xAF: return cpu::RES_B_R(5, &cpu::state.A);
+                case 0xB0: return cpu::RES_B_R(6, &cpu::state.B);
+                case 0xB1: return cpu::RES_B_R(6, &cpu::state.C);
+                case 0xB2: return cpu::RES_B_R(6, &cpu::state.D);
+                case 0xB3: return cpu::RES_B_R(6, &cpu::state.E);
+                case 0xB4: return cpu::RES_B_R(6, &cpu::state.H);
+                case 0xB5: return cpu::RES_B_R(6, &cpu::state.L);
+                case 0xB7: return cpu::RES_B_R(6, &cpu::state.A);
+                case 0xB8: return cpu::RES_B_R(7, &cpu::state.B);
+                case 0xB9: return cpu::RES_B_R(7, &cpu::state.C);
+                case 0xBA: return cpu::RES_B_R(7, &cpu::state.D);
+                case 0xBB: return cpu::RES_B_R(7, &cpu::state.E);
+                case 0xBC: return cpu::RES_B_R(7, &cpu::state.H);
+                case 0xBD: return cpu::RES_B_R(7, &cpu::state.L);
+                case 0xBF: return cpu::RES_B_R(7, &cpu::state.A);
+
+                case 0x86: return cpu::RES_B_HL(0);
+                case 0x8E: return cpu::RES_B_HL(1);
+                case 0x96: return cpu::RES_B_HL(2);
+                case 0x9E: return cpu::RES_B_HL(3);
+                case 0xA6: return cpu::RES_B_HL(4);
+                case 0xAE: return cpu::RES_B_HL(5);
+                case 0xB6: return cpu::RES_B_HL(6);
+                case 0xBE: return cpu::RES_B_HL(7);
+                
+                default: logging::logerr("Unimplemented CB instruction: " + byteToString(firstByte) + byteToString(secondByte)); return cpu::NOP();
             }
         case 0xD3: case 0xE3: case 0xE4: case 0xF4: case 0xDB: case 0xDD: case 0xEB: case 0xEC: case 0xED: case 0xFC: case 0xFD: 
             logging::logerr("Illegal instruction: " + byteToString(firstByte));
-            return instrInfo {1,4};
-        default: logging::logerr("Unimplemented instruction: " + byteToString(firstByte)); return instrInfo {1,4};
+            return cpu::NOP();
+        default: logging::logerr("Unimplemented instruction: " + byteToString(firstByte)); return cpu::NOP();
     }
 }
 
@@ -868,10 +1146,6 @@ instrInfo cpu::DEC_SS(ushort* regPair)
     return {1,8};
 }
 
-// Rotate Shift Instructions
-
-// Bit Operations
-
 // Jump Instructions
 
 //Sets the program counter to dest
@@ -1047,4 +1321,263 @@ instrInfo cpu::STOP()
 {
     cpu::state.HALTED = true;
     return {1,4};
+}
+
+// Rotate Shift Instructions
+
+//Rotates srcReg to the left.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of srcReg before operation
+instrInfo cpu::RLC_R(byte* srcReg)
+{
+    byte result = (*srcReg << 1) | (*srcReg >> 7);
+    cpu::setFlag(C_flag, getBit(*srcReg, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Rotates (value of memaddress in HL) to the left.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of (value of memaddress in HL) before operation
+instrInfo cpu::RLC_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl << 1) | (hl >> 7);
+    cpu::setFlag(C_flag, getBit(hl, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Rotates srcReg to the left, replacing bit 0 with carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of srcReg before operation
+instrInfo cpu::RL_R(byte* srcReg)
+{
+    byte result = (*srcReg << 1) | cpu::getFlag(C_flag);
+    cpu::setFlag(C_flag, getBit(*srcReg, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Rotates (value of memaddress in HL) to the left, replacing bit 0 with carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of (value of memaddress in HL) before operation
+instrInfo cpu::RL_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl << 1) | cpu::getFlag(C_flag);
+    cpu::setFlag(C_flag, getBit(hl, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Rotates srcReg to the right.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of srcReg before operation.
+instrInfo cpu::RRC_R(byte* srcReg)
+{
+    byte result = (*srcReg >> 1) | (*srcReg << 7);
+    cpu::setFlag(C_flag, getBit(*srcReg, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Rotates (value of memaddress in HL) to the right.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of (value of memaddress in HL) before operation.
+instrInfo cpu::RRC_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl >> 1) | (hl << 7);
+    cpu::setFlag(C_flag, getBit(hl, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Rotates srcReg to the right, replacing bit 7 with the carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of srcReg before operation.
+instrInfo cpu::RR_R(byte* srcReg)
+{
+    byte result = (*srcReg >> 1) | (cpu::getFlag(C_flag) << 7);
+    cpu::setFlag(C_flag, getBit(*srcReg, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Rotates (value of memaddress in HL) to the right, replacing bit 7 with the carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of (value of memaddress in HL) before operation.
+instrInfo cpu::RR_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl >> 1) | (cpu::getFlag(C_flag) << 7);
+    cpu::setFlag(C_flag, getBit(hl, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Shifts srcReg to the left.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of srcReg before operation.
+instrInfo cpu::SLA_R(byte* srcReg)
+{
+    byte result = (*srcReg << 1);
+    cpu::setFlag(C_flag, getBit(*srcReg, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Shifts (value of memaddress in HL) to the left.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of (value of memaddress in HL) before operation.
+instrInfo cpu::SLA_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl << 1);
+    cpu::setFlag(C_flag, getBit(hl, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Shifts srcReg to the right, but leave bit 7 unchanged.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of srcReg before operation.
+instrInfo cpu::SRA_R(byte* srcReg)
+{
+    byte result = (*srcReg >> 1) | (*srcReg & 0x80);
+    cpu::setFlag(C_flag, getBit(*srcReg, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Shifts (value of memaddress in HL) to the right, but leave bit 7 unchanged.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of (value of memaddress in HL) before operation.
+instrInfo cpu::SRA_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl >> 1) | (hl & 0x80);
+    cpu::setFlag(C_flag, getBit(hl, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Shifts srcReg to the right.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of srcReg before operation.
+instrInfo cpu::SRL_R(byte* srcReg)
+{
+    byte result = (*srcReg >> 1);
+    cpu::setFlag(C_flag, getBit(*srcReg, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Shifts (value of memaddress in HL) to the right.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of (value of memaddress in HL) before operation.
+instrInfo cpu::SRL_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = (hl >> 1);
+    cpu::setFlag(C_flag, getBit(hl, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Swaps the first and second nibbles of srcReg.
+//Flags: H = 0, N = 0, C = 0, Z if result is 0
+instrInfo cpu::SWAP_R(byte* srcReg)
+{
+    byte firstNib = *srcReg << 4;
+    byte secondNib = *srcReg >> 4;
+    byte result = firstNib | secondNib;
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Swaps the first and second nibbles of (value of memaddress in HL).
+//Flags: H = 0, N = 0, C = 0, Z if result is 0
+instrInfo cpu::SWAP_HL()
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte firstNib = hl << 4;
+    byte secondNib = hl >> 4;
+    byte result = firstNib | secondNib;
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(C_flag, 0);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+
+// Bit Operations
+
+//Sets Z flag to complement of bit bitIndex of srcReg
+//Flags: H = 1, N = 0, Z = complement
+instrInfo cpu::BIT_B_R(byte bitIndex, byte* srcReg)
+{
+    bool result = ~getBit(*srcReg, bitIndex);
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result);
+    return {2,8};
+}
+//Sets Z flag to complement of bit bitIndex of (value of memaddress in HL)
+//Flags: H = 1, N = 0, Z = complement
+instrInfo cpu::BIT_B_HL(byte bitIndex)
+{
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    bool result = ~getBit(hl, bitIndex);
+    cpu::setFlag(H_flag, 1);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, result);
+    return {2,12};
+}
+//Sets bit bitIndex in srcReg to 1
+instrInfo cpu::SET_B_R(byte bitIndex, byte* srcReg)
+{
+    byte result = setBit(*srcReg, bitIndex, 1);
+    *srcReg = result;
+    return {2,8};
+}
+//Sets bit bitIndex in (value of memaddress in HL) to 1
+instrInfo cpu::SET_B_HL(byte bitIndex)
+{
+    byte result = setBit(cpu::Memory->get8(cpu::state.HL), bitIndex, 1);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
+}
+//Sets bit bitIndex in srcReg to 0
+instrInfo cpu::RES_B_R(byte bitIndex, byte* srcReg)
+{
+    byte result = setBit(*srcReg, bitIndex, 0);
+    *srcReg = result;
+    return {2,8};
+}
+//Sets bit bitIndex in (value of memaddress in HL) to 0
+instrInfo cpu::RES_B_HL(byte bitIndex)
+{
+    byte result = setBit(cpu::Memory->get8(cpu::state.HL), bitIndex, 0);
+    cpu::Memory->set8(cpu::state.HL, result);
+    return {2,16};
 }
