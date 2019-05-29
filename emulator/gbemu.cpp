@@ -46,6 +46,10 @@ int main (int argc, char** argv)
     cpu CPU;
 
     state.PC = 0x100; //skip bootrom                                                              *TEMPORARY*
+    state.AF = 0x01B0;
+    state.BC = 0x0013;
+    state.DE = 0x00D8;
+    state.HL = 0x014D;
     state.SP = 0xFFFE; //initialise stack pointer as bootrom would
     Memory.set8(0xFF50, 1); //unmap bootrom
 
@@ -54,6 +58,7 @@ int main (int argc, char** argv)
     while(true)
     {
         CPU.step();
+        //std::cin.ignore(); //wait for keypress
     }
     /*
     for (ushort i = 0; i < fsize; i++)

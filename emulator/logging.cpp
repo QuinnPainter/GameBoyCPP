@@ -2,9 +2,13 @@
 #include "logging.hpp"
 
 //Prints out what you want with a newline
-void logging::log(std::string toLog)
+void logging::log(std::string toLog, bool newline)
 {
-    std::cout << toLog << std::endl;
+    std::cout << toLog;
+    if (newline)
+    {
+        std::cout << std::endl;
+    }
 }
 
 void logging::logerr(std::string toLog, bool fatal)

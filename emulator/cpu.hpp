@@ -70,6 +70,7 @@ class cpu
         void step();
         void initState(cpuState s, memory* m);
     private:
+        bool debug = false;
         instrInfo emulateOp();
         cpuState state;
         memory* Memory;

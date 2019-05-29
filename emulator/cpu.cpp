@@ -631,7 +631,36 @@ instrInfo cpu::emulateOp()
 
 void cpu::step()
 {
+    if(false)//if (cpu::state.PC == 0xC246) //breakpoint
+    {
+        debug = true;
+    }
+    if (debug)
+    {
+        std::cin.ignore();
+        logging::log("AF: " + ushortToString(cpu::state.AF), false);
+        logging::log(" BC: " + ushortToString(cpu::state.BC), false);
+        logging::log(" DE: " + ushortToString(cpu::state.DE), false);
+        logging::log(" HL: " + ushortToString(cpu::state.HL), false);
+        logging::log(" SP: " + ushortToString(cpu::state.SP), false);
+        logging::log(" PC: " + ushortToString(cpu::state.PC), false);
+    }
+    ushort pc = cpu::state.PC;
+
     instrInfo info = cpu::emulateOp();
+    if (debug)
+    {
+        logging::log(" "  + byteToString(cpu::Memory->get8(pc)), false);
+        if (info.numBytes > 1)
+        {
+            logging::log(" "  + byteToString(cpu::Memory->get8(pc + 1)), false);
+            if (info.numBytes > 2)
+            {
+                logging::log(" "  + byteToString(cpu::Memory->get8(pc + 2)), false);
+            }
+        }
+        logging::log(""); //newline
+    }
     if (info.incPC)
     {
         cpu::state.PC += info.numBytes;
@@ -1103,7 +1132,6 @@ instrInfo cpu::CP_A_HL()
     cpu::setFlag(H_flag, (cpu::state.A&0xF - hl&0xF) < 0);
     return {1,8};
 }
-
 //Increments srcReg
 //Flags: Z if result it 0, H if carry bit 3, N = 0
 instrInfo cpu::INC_R(byte* srcReg)
@@ -1132,7 +1160,7 @@ instrInfo cpu::DEC_R(byte* srcReg)
 {
     byte result = *srcReg - 1;
     cpu::setFlag(Z_flag, result == 0);
-    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(N_flag, 1);
     cpu::setFlag(H_flag, (*srcReg&0xF - 1) < 0);
     *srcReg = result;
     return {1,4};
@@ -1143,7 +1171,7 @@ instrInfo cpu::DEC_HL()
 {
     byte result = cpu::Memory->get8(cpu::state.HL) - 1;
     cpu::setFlag(Z_flag, result == 0);
-    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(N_flag, 1);
     cpu::setFlag(H_flag, (cpu::Memory->get8(cpu::state.HL)&0xF - 1) < 0);
     cpu::Memory->set8(cpu::state.HL, result);
     return {1,12};
@@ -1254,7 +1282,7 @@ instrInfo cpu::RET()
 {
     cpu::state.PC = cpu::Memory->get16(cpu::state.SP);
     cpu::state.SP += 2;
-    return {1,16};
+    return {1,16, false};
 }
 //Enables interrupts and returns. Same as doing EI and RET but only takes as many cycles as doing RET
 instrInfo cpu::RETI()
