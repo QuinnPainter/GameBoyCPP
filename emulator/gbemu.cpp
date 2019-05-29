@@ -44,6 +44,11 @@ int main (int argc, char** argv)
         logging::logerr("need a bootrom for now", true);
     }
     cpu CPU;
+
+    state.PC = 0x100; //skip bootrom                                                              *TEMPORARY*
+    state.SP = 0xFFFE; //initialise stack pointer as bootrom would
+    Memory.set8(0xFF50, 1); //unmap bootrom
+
     CPU.initState(state, &Memory);
     //Memory.set8(0xFF50, 1); //disable bootrom for testing
     while(true)

@@ -152,6 +152,10 @@ class cpu
         instrInfo EI();
         instrInfo HALT();
         instrInfo STOP();
+        instrInfo RLCA();
+        instrInfo RLA();
+        instrInfo RRCA();
+        instrInfo RRA();
         instrInfo RLC_R(byte* srcReg);
         instrInfo RLC_HL();
         instrInfo RL_R(byte* srcReg);

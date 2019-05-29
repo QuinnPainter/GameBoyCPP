@@ -13,7 +13,7 @@ instrInfo cpu::emulateOp()
     byte firstByte = cpu::Memory->get8(cpu::state.PC);
     byte secondByte = cpu::Memory->get8(cpu::state.PC + 1);
     byte thirdByte = cpu::Memory->get8(cpu::state.PC + 2);
-    logging::log(ushortToString(cpu::state.PC));
+    //logging::log(ushortToString(cpu::state.PC));
     //look at the first byte for instruction type
     switch (firstByte)
     {
@@ -214,6 +214,30 @@ instrInfo cpu::emulateOp()
 
         case 0xB6: return cpu::OR_A_HL();
 
+        case 0xA8: return cpu::XOR_A_R(&cpu::state.B);
+        case 0xA9: return cpu::XOR_A_R(&cpu::state.C);
+        case 0xAA: return cpu::XOR_A_R(&cpu::state.D);
+        case 0xAB: return cpu::XOR_A_R(&cpu::state.E);
+        case 0xAC: return cpu::XOR_A_R(&cpu::state.H);
+        case 0xAD: return cpu::XOR_A_R(&cpu::state.L);
+        case 0xAF: return cpu::XOR_A_R(&cpu::state.A);
+
+        case 0xEE: return cpu::XOR_A_N(secondByte);
+
+        case 0xAE: return cpu::XOR_A_HL();
+
+        case 0xB8: return cpu::CP_A_R(&cpu::state.B);
+        case 0xB9: return cpu::CP_A_R(&cpu::state.C);
+        case 0xBA: return cpu::CP_A_R(&cpu::state.D);
+        case 0xBB: return cpu::CP_A_R(&cpu::state.E);
+        case 0xBC: return cpu::CP_A_R(&cpu::state.H);
+        case 0xBD: return cpu::CP_A_R(&cpu::state.L);
+        case 0xBF: return cpu::CP_A_R(&cpu::state.A);
+
+        case 0xFE: return cpu::CP_A_N(secondByte);
+
+        case 0xBE: return cpu::CP_A_HL();
+
         case 0x04: return cpu::INC_R(&cpu::state.B);
         case 0x0C: return cpu::INC_R(&cpu::state.C);
         case 0x14: return cpu::INC_R(&cpu::state.D);
@@ -241,6 +265,16 @@ instrInfo cpu::emulateOp()
 
         case 0xE8: return cpu::ADD_SP_E(secondByte);
         
+        case 0x03: return cpu::INC_SS(&cpu::state.BC);
+        case 0x13: return cpu::INC_SS(&cpu::state.DE);
+        case 0x23: return cpu::INC_SS(&cpu::state.HL);
+        case 0x33: return cpu::INC_SS(&cpu::state.SP);
+
+        case 0x0B: return cpu::DEC_SS(&cpu::state.BC);
+        case 0x1B: return cpu::DEC_SS(&cpu::state.DE);
+        case 0x2B: return cpu::DEC_SS(&cpu::state.HL);
+        case 0x3B: return cpu::DEC_SS(&cpu::state.SP);
+
         case 0xC3: return cpu::JP_NN(combineBytes(thirdByte, secondByte));
 
         case 0xC2: return cpu::JP_CC_NN(cpu::getFlag(Z_flag) == 0, combineBytes(thirdByte, secondByte));
@@ -299,6 +333,11 @@ instrInfo cpu::emulateOp()
         case 0x76: return cpu::HALT();
 
         case 0x10: return cpu::STOP();
+
+        case 0x07: return cpu::RLCA();
+        case 0x17: return cpu::RLA();
+        case 0x0F: return cpu::RRCA();
+        case 0x1F: return cpu::RRA();
 
         case 0xCB:
             switch (secondByte)
@@ -580,7 +619,7 @@ instrInfo cpu::emulateOp()
                 case 0xAE: return cpu::RES_B_HL(5);
                 case 0xB6: return cpu::RES_B_HL(6);
                 case 0xBE: return cpu::RES_B_HL(7);
-                
+
                 default: logging::logerr("Unimplemented CB instruction: " + byteToString(firstByte) + byteToString(secondByte)); return cpu::NOP();
             }
         case 0xD3: case 0xE3: case 0xE4: case 0xF4: case 0xDB: case 0xDD: case 0xEB: case 0xEC: case 0xED: case 0xFC: case 0xFD: 
@@ -1325,6 +1364,54 @@ instrInfo cpu::STOP()
 
 // Rotate Shift Instructions
 
+//Rotates A to the left.
+//Flags: H = 0, N = 0, Z = 0, C = bit 7 of A before operation
+instrInfo cpu::RLCA()
+{
+    byte result = (cpu::state.A << 1) | (cpu::state.A >> 7);
+    cpu::setFlag(C_flag, getBit(cpu::state.A, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Rotates A to the left, replacing bit 0 with carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of A before operation
+instrInfo cpu::RLA()
+{
+    byte result = (cpu::state.A << 1) | cpu::getFlag(C_flag);
+    cpu::setFlag(C_flag, getBit(cpu::state.A, 7));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Rotates A to the right.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of A before operation.
+instrInfo cpu::RRCA()
+{
+    byte result = (cpu::state.A >> 1) | (cpu::state.A << 7);
+    cpu::setFlag(C_flag, getBit(cpu::state.A, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, 0);
+    cpu::state.A = result;
+    return {1,4};
+}
+//Rotates A to the right, replacing bit 7 with the carry flag.
+//Flags: H = 0, N = 0, Z if result is 0, C = bit 0 of A before operation.
+instrInfo cpu::RRA()
+{
+    byte result = (cpu::state.A >> 1) | (cpu::getFlag(C_flag) << 7);
+    cpu::setFlag(C_flag, getBit(cpu::state.A, 0));
+    cpu::setFlag(H_flag, 0);
+    cpu::setFlag(N_flag, 0);
+    cpu::setFlag(Z_flag, 0);
+    cpu::state.A = result;
+    return {1,4};
+}
 //Rotates srcReg to the left.
 //Flags: H = 0, N = 0, Z if result is 0, C = bit 7 of srcReg before operation
 instrInfo cpu::RLC_R(byte* srcReg)
