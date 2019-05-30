@@ -51,31 +51,69 @@ void memory::init(byte* rom, byte* bootrom)
         memory::bootrom = new byte[256];
         memcpy(memory::bootrom, bootrom, 256);
     }
-    //this area is inaccessible IO stuff - returns FF
-    std::fill(&(memBytes[0xFF4C]), &(memBytes[0xFF80]), 0xFF);
 }
 
 byte memory::get8(ushort address)
 {
-    if (address <= 0xFF && memory::memBytes[0xFF50] != 1)
+    if (address <= 0x00FF && memory::memBytes[0xFF50] != 1)
     {
         //if 0xFF50 is not 1, reading 0 to FF (255) gives the bootrom
         return memory::bootrom[address];
     }
+    if (address >= 0xFF4C && address < 0xFF80)
+    {
+        //unused IO area
+        return 0xFF;
+    }
+    if (address >= 0xFEA0 && address < 0xFEFF)
+    {
+        //unused area
+        return 0x00;
+    }
+    if (address >= 0xA000 && address < 0xC000)
+    {
+        //cartridge RAM       this will need to be accessible when I implement banking
+        return 0xFF;
+    }
     return memory::memBytes[fixMemAddress(address)];
 }
 
-void memory::set8(ushort address, byte value)
+void memory::set8(ushort address, byte value, bool force)
 {
-    if (address <= 0xFF && memory::memBytes[0xFF50] != 1)
+    //force allows you to change normally unchangeable memory
+    //it should only be used for internal stuff
+    if (!force)
     {
-        //if 0xFF50 is not 1, reading 0 to FF (255) gives the bootrom
-        logging::logerr("Can't set the bootrom!");
-        return;
+        if (address <= 0x00FF && memory::memBytes[0xFF50] != 1)
+        {
+            //if 0xFF50 is not 1, reading 0 to FF (255) gives the bootrom
+            return;
+        }
+        else if (address >= 0xFF4C && address < 0xFF80)
+        {
+            //unused IO area
+            return;
+        }
+        else if (address >= 0xFEA0 && address < 0xFEFF)
+        {
+            //unused area
+            return;
+        }
+        else if (address >= 0xA000 && address < 0xC000)
+        {
+            //cartridge RAM       this will need to be accessible when I implement banking
+            return;
+        }
+        else if (address == 0xFF04)
+        {
+            //reset divider register
+            memory::memBytes[0xFF04] = 0;
+            return;
+        }
     }
-    if (address == 0xFF01) //serial port / link cable
+    if (address == 0xFF02 && value == 0x81) //serial port / link cable
     {
-        std::cout << value;
+        logging::log(std::string(1, memory::get8(0xFF01)), false);
     }
     memory::memBytes[fixMemAddress(address)] = value;
 }

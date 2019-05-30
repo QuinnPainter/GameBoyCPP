@@ -4,3 +4,4 @@
 #include "cpu.hpp"
 
 void initSDL();
+void handleTimers(int cycles, memory* mem);
