@@ -7,6 +7,24 @@ void cpu::initState(cpuState s, memory* m)
     cpu::Memory = m;
 }
 
+cpuState cpu::getState()
+{
+    return cpu::state;
+}
+
+void cpu::serviceInterrupt(interrupts i)
+{
+    cpu::state.IME = 0;
+    cpu::state.HALTED = false;
+    cpu::pushOntoStack(cpu::state.PC);
+    cpu::state.PC = i;
+}
+
+void cpu::unhalt()
+{
+    cpu::state.HALTED = false;
+}
+
 instrInfo cpu::emulateOp()
 {
     //Instructions can be 1 to 3 bytes
@@ -678,6 +696,20 @@ bool cpu::getFlag(byte flag)
     return getBit(cpu::state.F, flag);
 }
 
+void cpu::pushOntoStack(ushort value)
+{
+    //cpu::Memory->set8(cpu::state.SP - 1, highByte(value));
+    //cpu::Memory->set8(cpu::state.SP - 2, lowByte(value));
+    cpu::state.SP -= 2;
+    cpu::Memory->set16(cpu::state.SP, value);
+}
+ushort cpu::popOffStack()
+{
+    ushort ret = cpu::Memory->get16(cpu::state.SP);
+    cpu::state.SP += 2;
+    return ret;
+}
+
 //              ----Instructions----
 // 8 Bit Loads
 
@@ -817,9 +849,7 @@ instrInfo cpu::LD_SP_HL()
 //Pushes regPair onto the stack
 instrInfo cpu::PUSH_QQ(ushort* regPair)
 {
-    cpu::Memory->set8(cpu::state.SP - 1, highByte(*regPair));
-    cpu::Memory->set8(cpu::state.SP - 2, lowByte(*regPair));
-    cpu::state.SP -= 2;
+    cpu::pushOntoStack(*regPair);
     return {1,16};
 }
 //Pops from the stack into regPair
@@ -1296,8 +1326,7 @@ instrInfo cpu::JP_HL()
 //Jumps to subroutine at dest, puts address after the CALL on the stack
 instrInfo cpu::CALL_NN(ushort dest)
 {
-    cpu::state.SP -= 2;
-    cpu::Memory->set16(cpu::state.SP, cpu::state.PC + 3);
+    cpu::pushOntoStack(cpu::state.PC + 3);
     cpu::state.PC = dest;
     return {3, 24, false};
 }
@@ -1314,8 +1343,9 @@ instrInfo cpu::CALL_CC_NN(bool condition, ushort dest)
 //Pops the return address from the stack and sets the PC to that.
 instrInfo cpu::RET()
 {
-    cpu::state.PC = cpu::Memory->get16(cpu::state.SP);
-    cpu::state.SP += 2;
+    //cpu::state.PC = cpu::Memory->get16(cpu::state.SP);
+    //cpu::state.SP += 2;
+    cpu::state.PC = cpu::popOffStack();
     return {1,16, false};
 }
 //Enables interrupts and returns. Same as doing EI and RET but only takes as many cycles as doing RET
@@ -1339,8 +1369,9 @@ instrInfo cpu::RET_CC(bool condition)
 //Similar to CALL, but goes to predefined spots in page 0 memory
 instrInfo cpu::RST(ushort dest)
 {
-    cpu::state.SP -= 2;
-    cpu::Memory->set16(cpu::state.SP, cpu::state.PC + 1);
+    //cpu::state.SP -= 2;
+    //cpu::Memory->set16(cpu::state.SP, cpu::state.PC + 1);
+    cpu::pushOntoStack(cpu::state.PC + 1);
     cpu::state.PC = dest;
     return {1, 16, false};
 }
@@ -1412,15 +1443,19 @@ instrInfo cpu::EI()
     return {1,4};
 }
 //Halts the CPU. Interrupts pull it back into normal operation.
+//TODO: HALT bug. This bug is triggered when a HALT instruction is executed while interrupts are disabled,
+//and there are pending interrupts waiting to be serviced. That is, IF & IE != 0. In this case, the CPU will not halt,
+//and instead fail to increment the PC, causing the next instruction to be executed twice. It does not execute HALT twice, 
+//because the PC has already incremented during instruction decoding.
 instrInfo cpu::HALT()
 {
-    cpu::state.STOPPED = true;
+    cpu::state.HALTED = true;
     return {1,4};
 }
 //Stops the CPU. A button press pulls it back into normal operation.
 instrInfo cpu::STOP()
 {
-    cpu::state.HALTED = true;
+    cpu::state.STOPPED = true;
     return {1,4};
 }
 

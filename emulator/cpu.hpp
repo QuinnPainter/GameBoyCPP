@@ -17,6 +17,15 @@ enum flags
     C_flag = 4
 };
 
+enum interrupts
+{
+    V_Blank_interrupt = 0x40,
+    LCD_interrupt = 0x48,
+    Timer_interrupt = 0x50,
+    Serial_interrupt = 0x58,
+    Joypad_interrupt = 0x60
+};
+
 struct cpuState
 {
     //using unions allows me to access both registers seperately, or together as a short if I want to
@@ -69,6 +78,9 @@ class cpu
     public:
         instrInfo step();
         void initState(cpuState s, memory* m);
+        cpuState getState();
+        void serviceInterrupt(interrupts i);
+        void unhalt();
     private:
         bool debug = false;
         instrInfo emulateOp();
@@ -76,6 +88,8 @@ class cpu
         memory* Memory;
         void setFlag(byte flag, bool value);
         bool getFlag(byte flag);
+        void pushOntoStack(ushort value);
+        ushort popOffStack();
         instrInfo LD_R_R(byte* dstReg, byte* srcReg);
         instrInfo LD_R_N(byte* dstReg, byte n);
         instrInfo LD_R_HL(byte* dstReg);

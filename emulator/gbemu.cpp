@@ -7,8 +7,8 @@ const int framerate = 60; //framerate to run emulator at. native gameboy is 60
 
 //Timers
 int DividerCounter;
-int TimerFrequency;
-int TimerCounter;
+int TimerFrequency = 4096;
+int TimerCounter = 4096;
 
 //arg 1 is game rom, arg 2 is bootrom
 int main (int argc, char** argv)
@@ -71,9 +71,18 @@ int main (int argc, char** argv)
         cycleCounter = 0;
         while (cycleCounter < clocksPerFrame)
         {
-            instrInfo info = CPU.step();
+            instrInfo info;
+            if (!CPU.getState().HALTED)
+            {
+                info = CPU.step();
+            }
+            else
+            {
+                info = {1,4}; //NOP - pretend to continue if console is halted so timers continue
+            }
             cycleCounter += info.numCycles;
             handleTimers(info.numCycles, &Memory);
+            handleInterrupts(&CPU, &Memory);
         }
         SDL_Delay(1000/framerate);
     }
@@ -82,6 +91,65 @@ int main (int argc, char** argv)
     SDL_Quit();
     logging::log("Exited successfully");
     return 0;
+}
+
+//Interrupts:
+//0 = V-Blank
+//1 = LCD Status
+//2 = Timer
+//3 = Serial
+//4 = Joypad
+//Interrupt enable register  : 0xFFFF
+//Interrupt request register : 0xFF0F
+void handleInterrupts(cpu* CPU, memory* mem)
+{
+    byte enabled = mem->get8(0xFFFF);
+    byte requested = mem->get8(0xFF0F);
+    if (getBit(requested, 0) && getBit(enabled, 0))
+    {
+        if (CPU->getState().IME)
+        {
+            mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 0, 0));
+            CPU->serviceInterrupt(V_Blank_interrupt);
+        }
+        CPU->unhalt();
+    }
+    else if (getBit(requested, 1) && getBit(enabled, 1))
+    {
+        if (CPU->getState().IME)
+        {
+            mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 1, 0));
+            CPU->serviceInterrupt(LCD_interrupt);
+        }
+        CPU->unhalt();
+    }
+    else if (getBit(requested, 2) && getBit(enabled, 2))
+    {
+        if (CPU->getState().IME)
+        {
+            mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 2, 0));
+            CPU->serviceInterrupt(Timer_interrupt);
+        }
+        CPU->unhalt();
+    }
+    else if (getBit(requested, 3) && getBit(enabled, 3))
+    {
+        if (CPU->getState().IME)
+        {
+            mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 3, 0));
+            CPU->serviceInterrupt(Serial_interrupt);
+        }
+        CPU->unhalt();
+    }
+    else if (getBit(requested, 4) && getBit(enabled, 4))
+    {
+        if (CPU->getState().IME)
+        {
+            mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 4, 0));
+            CPU->serviceInterrupt(Joypad_interrupt);
+        }
+        CPU->unhalt();
+    }
 }
 
 void handleTimers(int cycles, memory* mem)
@@ -104,9 +172,9 @@ void handleTimers(int cycles, memory* mem)
         case 0b10: newFrequency = 65536; break;
         case 0b11: newFrequency = 16384; break;
     }
-    if (frequencySetting != newFrequency)
+    if (TimerFrequency != newFrequency)
     {
-        frequencySetting = newFrequency;
+        TimerFrequency = newFrequency;
         TimerCounter = newFrequency;
         return;
     }
@@ -115,11 +183,11 @@ void handleTimers(int cycles, memory* mem)
         TimerCounter -= (clockspeed / cycles);
         if (TimerCounter <= 0)
         {
-            TimerCounter = frequencySetting;
+            TimerCounter = TimerFrequency;
             if (mem->get8(0xFF05) == 0xFF) //about to overflow
             {
                 mem->set8(0xFF05, mem->get8(0xFF06));
-                // todo: trigger overflow interrupt
+                mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 2, 1)); // request timer interrupt
             }
             else
             {
