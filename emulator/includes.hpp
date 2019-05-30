@@ -6,6 +6,7 @@
 #include <sstream>
 #include <bitset>
 #include <algorithm>
+#include <SDL.h>
 
 typedef unsigned char byte;
 typedef signed char sbyte;

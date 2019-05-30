@@ -67,7 +67,7 @@ struct cpuState
 class cpu
 {
     public:
-        void step();
+        instrInfo step();
         void initState(cpuState s, memory* m);
     private:
         bool debug = false;

@@ -629,7 +629,7 @@ instrInfo cpu::emulateOp()
     }
 }
 
-void cpu::step()
+instrInfo cpu::step()
 {
     if(false)//if (cpu::state.PC == 0xC246) //breakpoint
     {
@@ -665,6 +665,7 @@ void cpu::step()
     {
         cpu::state.PC += info.numBytes;
     }
+    return info;
 }
 
 void cpu::setFlag(byte flag, bool value)
@@ -1211,7 +1212,7 @@ instrInfo cpu::DEC_HL()
 //Flags: N = 0, H if carry bit 11,  C if carry bit 15
 instrInfo cpu::ADD_HL_SS(ushort* regPair)
 {
-    ushort result = *regPair + cpu::state.HL;
+    //ushort result = *regPair + cpu::state.HL;
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((*regPair + cpu::state.HL) & 0x10000) == 0x10000);
     cpu::setFlag(H_flag, (((*regPair&0xFFF) + (cpu::state.HL&0xFFF)) & 0x1000) == 0x1000);
