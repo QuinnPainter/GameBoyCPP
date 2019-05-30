@@ -833,11 +833,16 @@ instrInfo cpu::POP_QQ(ushort* regPair)
 //Flags: Z = 0, H if carry bit 11, N = 0, C if carry bit 15
 instrInfo cpu::LDHL_SP_N(byte n)
 {
+    sbyte s = static_cast<sbyte>(n);
+    ushort result = cpu::state.SP + s;
     cpu::setFlag(Z_flag, 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(C_flag, ((n + cpu::state.SP) & 0x10000) == 0x10000);
-    cpu::setFlag(H_flag, ((n&0xFFF + cpu::state.SP&0xFFF) & 0x1000) == 0x1000);
-    cpu::state.HL = cpu::state.SP + n;
+    //cpu::setFlag(C_flag, ((s + cpu::state.SP) & 0x10000) == 0x10000);
+    //cpu::setFlag(H_flag, ((s + (cpu::state.SP&0xFFF)) & 0x1000) == 0x1000);
+    ushort check = cpu::state.SP ^ s ^ ((cpu::state.SP + s) & 0xFFFF);
+    cpu::setFlag(C_flag, (check & 0x100) == 0x100);
+    cpu::setFlag(H_flag, ((check & 0x10) == 0x10));
+    cpu::state.HL = result;
     return {2,12};
 }
 //Copies SP into memory address nn
@@ -856,7 +861,9 @@ instrInfo cpu::ADD_A_R(byte* srcReg)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A + *srcReg) == 0);
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((*srcReg + cpu::state.A) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((*srcReg&0xF + cpu::state.A&0xF) & 0x10) == 0x10);
+    cpu::setFlag(H_flag, (((*srcReg&0xF) + (cpu::state.A&0xF)) & 0x10) == 0x10);
+    //cpu::setFlag(C_flag, (*srcReg + cpu::state.A) > 0xFF);
+    //cpu::setFlag(H_flag, ((*srcReg&0xF) + (cpu::state.A&0xF)) > 0xF);                alternate approach
     cpu::state.A += *srcReg;
     return {1,4};
 }
@@ -867,7 +874,7 @@ instrInfo cpu::ADD_A_N(byte n)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A + n) == 0);
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((n + cpu::state.A) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((n&0xF + cpu::state.A&0xF) & 0x10) == 0x10);
+    cpu::setFlag(H_flag, (((n&0xF) + (cpu::state.A&0xF)) & 0x10) == 0x10);
     cpu::state.A += n;
     return {2,8};
 }
@@ -879,7 +886,7 @@ instrInfo cpu::ADD_A_HL()
     cpu::setFlag(Z_flag, (byte)(cpu::state.A + n) == 0);
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((n + cpu::state.A) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((n&0xF + cpu::state.A&0xF) & 0x10) == 0x10);
+    cpu::setFlag(H_flag, (((n&0xF) + (cpu::state.A&0xF)) & 0x10) == 0x10);
     cpu::state.A += n;
     return {1,8};
 }
@@ -887,11 +894,15 @@ instrInfo cpu::ADD_A_HL()
 //Flags: Z if result is 0, H if carry bit 3, N = 0, C if carry bit 7
 instrInfo cpu::ADC_A_R(byte* srcReg)
 {
+    //int fullResult = cpu::state.A + *srcReg + cpu::getFlag(C_flag);
+    //byte result = static_cast<byte>(fullResult);
     byte result = cpu::state.A + *srcReg + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, (((cpu::state.A&0xF) + (*srcReg&0xF) + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::setFlag(C_flag, ((cpu::state.A + *srcReg + cpu::getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + *srcReg&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
+    //cpu::setFlag(C_flag, fullResult > 0xFF);
+    //cpu::setFlag(H_flag, ((cpu::state.A&0xF) + (*srcReg&0xF) + cpu::getFlag(C_flag)) > 0xF);
     cpu::state.A = result;
     return {1,4};
 }
@@ -902,8 +913,8 @@ instrInfo cpu::ADC_A_N(byte n)
     byte result = cpu::state.A + n + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, (((cpu::state.A&0xF) + (n&0xF) + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::setFlag(C_flag, ((cpu::state.A + n + cpu::getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + n&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::state.A = result;
     return {2,8};
 }
@@ -915,8 +926,8 @@ instrInfo cpu::ADC_A_HL()
     byte result = cpu::state.A + hl + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
+    cpu::setFlag(H_flag, (((cpu::state.A&0xF) + (hl&0xF) + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::setFlag(C_flag, ((cpu::state.A + hl + cpu::getFlag(C_flag)) & 0x100) == 0x100);
-    cpu::setFlag(H_flag, ((cpu::state.A&0xF + hl&0xF + cpu::getFlag(C_flag)) & 0x10) == 0x10);
     cpu::state.A = result;
     return {1,8};
 }
@@ -927,7 +938,7 @@ instrInfo cpu::SUB_A_R(byte* srcReg)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - *srcReg) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - *srcReg) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - *srcReg&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (*srcReg&0xF)) < 0);
     cpu::state.A -= *srcReg;
     return {1,4};
 }
@@ -938,7 +949,7 @@ instrInfo cpu::SUB_A_N(byte n)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - n) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - n) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - n&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (n&0xF)) < 0);
     cpu::state.A -= n;
     return {2,8};
 }
@@ -950,7 +961,7 @@ instrInfo cpu::SUB_A_HL()
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - hl) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - hl) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - hl&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (hl&0xF)) < 0);
     cpu::state.A -= hl;
     return {1,8};
 }
@@ -958,37 +969,54 @@ instrInfo cpu::SUB_A_HL()
 //Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
 instrInfo cpu::SBC_A_R(byte* srcReg)
 {
+    /*
     byte toSub = *srcReg + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (toSub&0xF)) < 0);
     cpu::state.A -= toSub;
+    */
+    byte result = cpu::state.A - *srcReg - cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(H_flag, (static_cast<byte>((cpu::state.A&0xF) - (*srcReg&0xF) - cpu::getFlag(C_flag)) > 0xF));
+    cpu::setFlag(C_flag, (static_cast<uint16_t>(cpu::state.A - *srcReg - cpu::getFlag(C_flag)) > 0xff));
+    cpu::state.A = result;
     return {1,4};
 }
 //Subtracts (n + carry) from A, stores in A
 //Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
 instrInfo cpu::SBC_A_N(byte n)
 {
-    byte toSub = n + cpu::getFlag(C_flag);
-    cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
+    byte result = cpu::state.A - n - cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 1);
-    cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
-    cpu::state.A -= toSub;
+    cpu::setFlag(H_flag, (static_cast<byte>((cpu::state.A&0xF) - (n&0xF) - cpu::getFlag(C_flag)) > 0xF));
+    cpu::setFlag(C_flag, (static_cast<uint16_t>(cpu::state.A - n - cpu::getFlag(C_flag)) > 0xff));
+    cpu::state.A = result;
     return {2,8};
 }
 //Subtracts ((value in mem addr HL) + carry) from A, stores in A
 //Flags: Z if result is 0, H if carry bit 4, N = 1, C if carry
 instrInfo cpu::SBC_A_HL()
 {
+    byte hl = cpu::Memory->get8(cpu::state.HL);
+    byte result = cpu::state.A - hl - cpu::getFlag(C_flag);
+    cpu::setFlag(Z_flag, result == 0);
+    cpu::setFlag(N_flag, 1);
+    cpu::setFlag(H_flag, (static_cast<byte>((cpu::state.A&0xF) - (hl&0xF) - cpu::getFlag(C_flag)) > 0xF));
+    cpu::setFlag(C_flag, (static_cast<uint16_t>(cpu::state.A - hl - cpu::getFlag(C_flag)) > 0xff));
+    cpu::state.A = result;
+    return {1,8};
+    /*
     byte toSub = cpu::Memory->get8(cpu::state.HL) + cpu::getFlag(C_flag);
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - toSub) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - toSub) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - toSub&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (toSub&0xF)) < 0);
     cpu::state.A -= toSub;
-    return {1,8};
+    */
 }
 //Performs bitwise AND on srcReg and A, stores in A
 //Flags: C = 0, H = 1, N = 0, Z if result is 0
@@ -1106,7 +1134,7 @@ instrInfo cpu::CP_A_R(byte* srcReg)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - *srcReg) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - *srcReg) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - *srcReg&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (*srcReg&0xF)) < 0);
     return {1,4};
 }
 //"Compares" n and A
@@ -1117,7 +1145,7 @@ instrInfo cpu::CP_A_N(byte n)
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - n) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - n) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - n&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (n&0xF)) < 0);
     return {2,8};
 }
 //"Compares" (value of memaddress in HL) and A
@@ -1129,7 +1157,7 @@ instrInfo cpu::CP_A_HL()
     cpu::setFlag(Z_flag, (byte)(cpu::state.A - hl) == 0);
     cpu::setFlag(N_flag, 1);
     cpu::setFlag(C_flag, (cpu::state.A - hl) < 0);
-    cpu::setFlag(H_flag, (cpu::state.A&0xF - hl&0xF) < 0);
+    cpu::setFlag(H_flag, ((cpu::state.A&0xF) - (hl&0xF)) < 0);
     return {1,8};
 }
 //Increments srcReg
@@ -1139,7 +1167,7 @@ instrInfo cpu::INC_R(byte* srcReg)
     byte result = *srcReg + 1;
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(H_flag, ((*srcReg&0xF + 1) & 0x10) == 0x10);
+    cpu::setFlag(H_flag, (((*srcReg&0xF) + 1) & 0x10) == 0x10);
     *srcReg = result;
     return {1,4};
 }
@@ -1150,7 +1178,7 @@ instrInfo cpu::INC_HL()
     byte result = cpu::Memory->get8(cpu::state.HL) + 1;
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 0);
-    cpu::setFlag(H_flag, ((cpu::Memory->get8(cpu::state.HL)&0xF + 1) & 0x10) == 0x10);
+    cpu::setFlag(H_flag, (((cpu::Memory->get8(cpu::state.HL)&0xF) + 1) & 0x10) == 0x10);
     cpu::Memory->set8(cpu::state.HL, result);
     return {1,12};
 }
@@ -1161,7 +1189,7 @@ instrInfo cpu::DEC_R(byte* srcReg)
     byte result = *srcReg - 1;
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 1);
-    cpu::setFlag(H_flag, (*srcReg&0xF - 1) < 0);
+    cpu::setFlag(H_flag, ((*srcReg&0xF) - 1) < 0);
     *srcReg = result;
     return {1,4};
 }
@@ -1172,7 +1200,7 @@ instrInfo cpu::DEC_HL()
     byte result = cpu::Memory->get8(cpu::state.HL) - 1;
     cpu::setFlag(Z_flag, result == 0);
     cpu::setFlag(N_flag, 1);
-    cpu::setFlag(H_flag, (cpu::Memory->get8(cpu::state.HL)&0xF - 1) < 0);
+    cpu::setFlag(H_flag, ((cpu::Memory->get8(cpu::state.HL)&0xF) - 1) < 0);
     cpu::Memory->set8(cpu::state.HL, result);
     return {1,12};
 }
@@ -1183,9 +1211,10 @@ instrInfo cpu::DEC_HL()
 //Flags: N = 0, H if carry bit 11,  C if carry bit 15
 instrInfo cpu::ADD_HL_SS(ushort* regPair)
 {
+    ushort result = *regPair + cpu::state.HL;
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(C_flag, ((*regPair + cpu::state.HL) & 0x10000) == 0x10000);
-    cpu::setFlag(H_flag, ((*regPair&0xFFF + cpu::state.HL&0xFFF) & 0x1000) == 0x1000);
+    cpu::setFlag(H_flag, (((*regPair&0xFFF) + (cpu::state.HL&0xFFF)) & 0x1000) == 0x1000);
     cpu::state.HL += *regPair;
     return {1,8};
 }
@@ -1193,11 +1222,15 @@ instrInfo cpu::ADD_HL_SS(ushort* regPair)
 //Flags: N = 0, Z = 0, H if carry bit 11, C if carry bit 15
 instrInfo cpu::ADD_SP_E(byte e)
 {
+    sbyte n = static_cast<sbyte>(e);
+    ushort result = cpu::state.SP + n;
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(Z_flag, 0);
-    cpu::setFlag(C_flag, ((e + cpu::state.SP) & 0x10000) == 0x10000);
-    cpu::setFlag(H_flag, ((e + cpu::state.SP&0xFFF) & 0x1000) == 0x1000);
-    cpu::state.HL += e;
+    //cpu::setFlag(C_flag, ((cpu::state.SP + n) & 0x10000) == 0x10000);
+    //cpu::setFlag(H_flag, (((cpu::state.SP&0xFFF) + n) & 0x1000) == 0x1000);
+    cpu::setFlag(C_flag, (result&0xFF) < (cpu::state.SP&0xFF));
+    cpu::setFlag(H_flag, (result&0xF) < (cpu::state.SP&0xF));
+    cpu::state.SP = result;
     return {2,16};
 }
 //Increment regPair
@@ -1651,7 +1684,7 @@ instrInfo cpu::SWAP_HL()
 //Flags: H = 1, N = 0, Z = complement
 instrInfo cpu::BIT_B_R(byte bitIndex, byte* srcReg)
 {
-    bool result = ~getBit(*srcReg, bitIndex);
+    bool result = !getBit(*srcReg, bitIndex);
     cpu::setFlag(H_flag, 1);
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(Z_flag, result);
@@ -1662,7 +1695,7 @@ instrInfo cpu::BIT_B_R(byte bitIndex, byte* srcReg)
 instrInfo cpu::BIT_B_HL(byte bitIndex)
 {
     byte hl = cpu::Memory->get8(cpu::state.HL);
-    bool result = ~getBit(hl, bitIndex);
+    bool result = !getBit(hl, bitIndex);
     cpu::setFlag(H_flag, 1);
     cpu::setFlag(N_flag, 0);
     cpu::setFlag(Z_flag, result);
