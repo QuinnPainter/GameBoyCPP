@@ -13,5 +13,6 @@ class memory
     private:
         byte* memBytes;
         byte* bootrom;
+        void doDMA(byte value);
         ushort fixMemAddress(ushort address);
 };

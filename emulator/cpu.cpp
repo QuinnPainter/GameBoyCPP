@@ -1,7 +1,7 @@
 #include "includes.hpp"
 #include "cpu.hpp"
 
-void cpu::initState(cpuState s, memory* m)
+cpu::cpu(cpuState s, memory* m)
 {
     cpu::state = s;
     cpu::Memory = m;

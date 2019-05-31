@@ -1,4 +1,4 @@
-OBJS = gbemu.cpp logging.cpp memory.cpp cpu.cpp helpers.cpp
+OBJS = gbemu.cpp logging.cpp memory.cpp cpu.cpp gpu.cpp helpers.cpp
 CC = g++
 INCLUDE_PATHS = -I"C:\src\SDL2-2.0.9\i686-w64-mingw32\include\SDL2"
 LIBRARY_PATHS = -L"C:\src\SDL2-2.0.9\i686-w64-mingw32\lib"

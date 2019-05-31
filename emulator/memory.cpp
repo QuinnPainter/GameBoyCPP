@@ -110,6 +110,18 @@ void memory::set8(ushort address, byte value, bool force)
             memory::memBytes[0xFF04] = 0;
             return;
         }
+        else if (address == 0xFF44)
+        {
+            //reset current scanline register
+            memory::memBytes[0xFF44] = 0;
+            return;
+        } 
+        else if (address == 0xFF46)
+        {
+            //DMA block of memory
+            memory::doDMA(value);
+            return;
+        }
     }
     if (address == 0xFF02 && value == 0x81) //serial port / link cable
     {
@@ -127,6 +139,16 @@ void memory::set16(ushort address, ushort value)
 {
     memory::set8(address + 1, highByte(value));
     memory::set8(address, lowByte(value));
+}
+
+//Copies given block of data into the OAM
+void memory::doDMA(byte value)
+{
+    ushort address = value << 8;
+    for (int i = 0; i < 0xA0; i++)
+    {
+        memory::set8(0xFE00 + i, memory::get8(address + i));
+    }
 }
 
 ushort memory::fixMemAddress(ushort address)

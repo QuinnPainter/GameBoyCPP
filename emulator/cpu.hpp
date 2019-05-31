@@ -77,7 +77,7 @@ class cpu
 {
     public:
         instrInfo step();
-        void initState(cpuState s, memory* m);
+        cpu (cpuState s, memory* m);
         cpuState getState();
         void serviceInterrupt(interrupts i);
         void unhalt();

@@ -58,16 +58,29 @@ int main (int argc, char** argv)
     state.BC = 0x0013;
     state.DE = 0x00D8;
     state.HL = 0x014D;
-    cpu CPU;
-
-    CPU.initState(state, &Memory);
-
+    
     initSDL();
+    
+    cpu CPU(state, &Memory);
+    gpu GPU(&Memory);
 
     int clocksPerFrame = clockspeed / framerate;
     int cycleCounter = 0;
-    while(true)
+    bool quit = false;
+    SDL_Event event;
+    while(!quit)
     {
+        while(SDL_PollEvent(&event) != 0)
+        {
+            switch((event).type)
+            {
+                case SDL_QUIT:
+                {
+                    quit = true;
+                    break;
+                }
+            }
+        }
         cycleCounter = 0;
         while (cycleCounter < clocksPerFrame)
         {
@@ -82,6 +95,7 @@ int main (int argc, char** argv)
             }
             cycleCounter += info.numCycles;
             handleTimers(info.numCycles, &Memory);
+            GPU.update(info.numCycles);
             handleInterrupts(&CPU, &Memory);
         }
         SDL_Delay(1000/framerate);
