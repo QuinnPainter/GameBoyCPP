@@ -91,14 +91,14 @@ void memory::set8(ushort address, byte value, bool force)
         }
         else if (address >= 0xFF4C && address < 0xFF80)
         {
-            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
-            //unused IO area
+            //unused area, may as well set it anyway - need FF50 for bootrom
+            memory::memBytes[fixMemAddress(address)] = value;
             return;
         }
         else if (address >= 0xFEA0 && address < 0xFF00)
         {
-            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
             //unused area
+            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
             return;
         }
         else if (address >= 0xA000 && address < 0xC000)
