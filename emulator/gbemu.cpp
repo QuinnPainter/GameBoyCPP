@@ -60,7 +60,7 @@ int main (int argc, char** argv)
     state.HL = 0x014D;
     
     initSDL();
-    
+
     cpu CPU(state, &Memory);
     gpu GPU(&Memory);
 
@@ -98,6 +98,7 @@ int main (int argc, char** argv)
             GPU.update(info.numCycles);
             handleInterrupts(&CPU, &Memory);
         }
+        GPU.displayScreen();
         SDL_Delay(1000/framerate);
     }
 

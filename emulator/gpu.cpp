@@ -2,7 +2,7 @@
 #include "gpu.hpp"
 
 /*
-Video Registers:
+    Video Registers:
 FF40 = LCD Control  
   Bit 7 - LCD Display Enable             (0=Off, 1=On)
   Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
@@ -28,10 +28,19 @@ FF43 = Scroll X
 FF44 = LY / Current Scanline
 FF45 = LY Compare
 FF4A = Window Y
-FF4B = Window X
+FF4B = Window X (-7)
 FF47 = Palette
+    Memory Areas:
+$8000-$97FF 	Character RAM (Tile Data)
+$9800-$9BFF 	BG Map Data 1
+$9C00-$9FFF 	BG Map Data 2
+$FE00-$FE9F 	OAM - Object Attribute Memory (Sprite Data)
 */
 
+const SDL_Color colour0 = {255,255,255,SDL_ALPHA_OPAQUE};  //00: White
+const SDL_Color colour1 = {200,200,200,SDL_ALPHA_OPAQUE};  //01: Light Grey
+const SDL_Color colour2 = {100,100,100,SDL_ALPHA_OPAQUE};  //10: Dark Grey
+const SDL_Color colour3 = {000,000,000,SDL_ALPHA_OPAQUE};  //11: Black
 const int XResolution = 160;
 const int YResolution = 144;
 const int Scale = 2;
@@ -45,14 +54,18 @@ gpu::gpu(memory* mem)
     gpu::window = SDL_CreateWindow("Gameboy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if(gpu::window == NULL)
     {
-        logging::log("Window could not be created! SDL_Error: " + std::string(SDL_GetError()));
+        logging::logerr("Window could not be created! SDL_Error: " + std::string(SDL_GetError()));
     }
-    gpu::screenRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    gpu::screenSurface = SDL_GetWindowSurface(gpu::window);
+    if (gpu::screenSurface == NULL)
+    {
+        logging::logerr("Surface could not be created! SDL_Error: " + std::string(SDL_GetError()));
+    }
 }
 
 gpu::~gpu()
 {
-    SDL_DestroyRenderer(gpu::screenRenderer);
+    SDL_FreeSurface(gpu::screenBuffer);
     SDL_DestroyWindow(gpu::window);
 }
 
@@ -77,6 +90,13 @@ void gpu::update(int cycles)
         else if (currentScanline > 153)
         {
             gpu::Memory->set8(0xFF44, 0, true);
+        }
+        //hacky solution for bringing currentScanline from a range of 1-143 to 0-143
+        if (currentScanline < 145)
+        {
+            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) - 1, true);
+            gpu::drawScanline();
+            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) + 1, true);
         }
     }
 }
@@ -161,4 +181,116 @@ void gpu::setLCDMode(int mode)
             break;
     }
     gpu::Memory->set8(0xFF41, status);
+}
+
+void gpu::drawScanline()
+{
+    byte options = Memory->get8(0xFF40);
+    if (getBit(options, 0))
+    {
+        gpu::drawBackground();
+    }
+}
+
+//Draws the background and window layers
+void gpu::drawBackground()
+{
+    byte scrollY = gpu::Memory->get8(0xFF42);
+    byte scrollX = gpu::Memory->get8(0xFF43);
+    byte windowY = gpu::Memory->get8(0xFF4A);
+    byte windowX = gpu::Memory->get8(0xFF4B) - 7;
+    byte control = gpu::Memory->get8(0xFF40);
+    byte currentScanline = gpu::Memory->get8(0xFF44);
+
+    bool drawingWindow = (getBit(control, 5) && (windowY <= currentScanline));
+
+    ushort tileData;
+    ushort tileMap;
+    bool isSigned;
+
+    if (getBit(control, 4))
+    {
+        tileData = 0x8000;
+        isSigned = false;
+    }
+    else
+    {
+        tileData = 0x8800;
+        isSigned = true;
+    }
+
+    bool dataBank;
+
+    dataBank = drawingWindow ? getBit(control, 6) : getBit(control, 3);
+    tileMap = dataBank ? 0x9C00 : 0x9800;
+
+    byte adjustedY = currentScanline;
+    for (int x = 0; x < XResolution; x++)
+    {
+        byte adjustedX = x;
+        byte tileIdentifier = gpu::Memory->get8(tileMap + (adjustedX/8) + ((byte)(adjustedY/8) * 32));
+        ushort tileAddress;
+        if (isSigned)
+        {
+            tileAddress = (tileData + ((static_cast<sbyte>(tileIdentifier) + 128) * 16));
+        }
+        else
+        {
+            tileAddress = (tileData + (tileIdentifier * 16));
+        }
+        byte lineIndex = ((adjustedY % 8) * 2); //which line of the tile to use
+        byte line1 = gpu::Memory->get8(tileAddress + lineIndex);
+        byte line2 = gpu::Memory->get8(tileAddress + lineIndex + 1);
+
+        int colourIndex = adjustedX % 8;
+        //convert from 0 - 7 to 7 - 0
+        colourIndex = ((colourIndex - 7) * -1);
+
+        byte colourNumber = ((getBit(line2, colourIndex) << 1) | getBit(line1, colourIndex));
+        colourNumber = gpu::paletteAdjustColour(colourNumber, gpu::Memory->get8(0xFF47));
+        gpu::drawPixel(x, currentScanline, colourNumber);
+    }
+}
+
+byte gpu::paletteAdjustColour(byte colour, byte palette)
+{
+    switch (colour)
+    {
+        case 0: return (palette & 0x03);
+        case 1: return ((palette & 0x0C) >> 2);
+        case 2: return ((palette & 0x30) >> 4);
+        case 3: return ((palette & 0xC0) >> 6);
+    }
+    return 0;
+}
+
+void gpu::drawPixel(byte x, byte y, byte colour)
+{
+    SDL_Colour pixColour;
+    switch (colour)
+    {
+        case 0:
+            pixColour = colour0;
+            break;
+        case 1:
+            pixColour = colour1;
+            break;
+        case 2:
+            pixColour = colour2;
+            break;
+        case 3:
+            pixColour = colour3;
+            break;
+    }
+    int memLocation = ((x * 3) + (y * XResolution * 3));
+    gpu::screenData[memLocation] = pixColour.r;
+    gpu::screenData[memLocation + 1] = pixColour.g;
+    gpu::screenData[memLocation + 2] = pixColour.b;
+}
+
+void gpu::displayScreen()
+{
+    gpu::screenBuffer = SDL_CreateRGBSurfaceWithFormatFrom(gpu::screenData, XResolution, YResolution, 24, XResolution * 3, SDL_PIXELFORMAT_RGB24);
+    SDL_BlitScaled(gpu::screenBuffer, NULL, gpu::screenSurface, NULL);
+    SDL_UpdateWindowSurface(gpu::window);
 }

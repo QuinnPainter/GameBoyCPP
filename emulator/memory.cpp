@@ -65,7 +65,7 @@ byte memory::get8(ushort address)
         //unused IO area
         return 0xFF;
     }
-    if (address >= 0xFEA0 && address < 0xFEFF)
+    if (address >= 0xFEA0 && address < 0xFF00)
     {
         //unused area
         return 0x00;
@@ -91,11 +91,13 @@ void memory::set8(ushort address, byte value, bool force)
         }
         else if (address >= 0xFF4C && address < 0xFF80)
         {
+            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
             //unused IO area
             return;
         }
-        else if (address >= 0xFEA0 && address < 0xFEFF)
+        else if (address >= 0xFEA0 && address < 0xFF00)
         {
+            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
             //unused area
             return;
         }
@@ -153,11 +155,6 @@ void memory::doDMA(byte value)
 
 ushort memory::fixMemAddress(ushort address)
 {
-    if (address >= 0xFEA0 && address <= 0xFEFF)
-    {
-        logging::logerr(ushortToString(address) + " is a forbidden memory address!");
-        return address;
-    }
     //echo RAM
     if (address >= 0xE000 && address <= 0xFDFF)
     {
