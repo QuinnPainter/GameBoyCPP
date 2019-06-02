@@ -29,7 +29,9 @@ FF44 = LY / Current Scanline
 FF45 = LY Compare
 FF4A = Window Y
 FF4B = Window X (-7)
-FF47 = Palette
+FF47 = Background Palette
+FF48 = Sprite Palette 1
+FF49 = Sprite Palette 2
     Memory Areas:
 $8000-$97FF 	Character RAM (Tile Data)
 $9800-$9BFF 	BG Map Data 1
@@ -190,6 +192,10 @@ void gpu::drawScanline()
     {
         gpu::drawBackground();
     }
+    if (getBit(options, 1))
+    {
+        gpu::drawSprites();
+    }
 }
 
 //Draws the background and window layers
@@ -224,21 +230,15 @@ void gpu::drawBackground()
         tileMap = dataBank ? 0x9C00 : 0x9800;
 
         byte adjustedY;
-        if (!drawingWindow)
-        {
-            adjustedY = currentScanline + scrollY;
-        }
-        else
-        {
-            adjustedY = currentScanline - windowY;
-        }
         byte adjustedX;
         if (drawingWindow)
         {
+            adjustedY = currentScanline - windowY;
             adjustedX = x - windowX;
         }
         else
         {
+            adjustedY = currentScanline + scrollY;
             adjustedX = x + scrollX;
         }
         
@@ -263,6 +263,71 @@ void gpu::drawBackground()
         byte colourNumber = ((getBit(line2, colourIndex) << 1) | getBit(line1, colourIndex));
         colourNumber = gpu::paletteAdjustColour(colourNumber, gpu::Memory->get8(0xFF47));
         gpu::drawPixel(x, currentScanline, colourNumber);
+    }
+}
+
+void gpu::drawSprites()
+{
+    //TODO : 8x16 sprite mode
+    byte currentScanline = gpu::Memory->get8(0xFF44);
+    //do sprites backwards for semi-correct depth priorities
+    for (int spriteNum = 39; spriteNum >= 0; spriteNum--)
+    {
+        byte spriteIndex = spriteNum * 4;
+        int yPos = gpu::Memory->get8(0xFE00 + spriteIndex) - 16;
+        int xPos = gpu::Memory->get8(0xFE00 + spriteIndex + 1) - 8;
+        byte tileIdentifier = gpu::Memory->get8(0xFE00 + spriteIndex + 2);
+        byte attributes = gpu::Memory->get8(0xFE00 + spriteIndex + 3);
+
+        bool priority = getBit(attributes, 7); //0 = Above BG, 1 = Behind BG
+        bool yFlip = getBit(attributes, 6);
+        bool xFlip = getBit(attributes, 5);
+        ushort spritePaletteAddress = getBit(attributes, 4) ? 0xFF49 : 0xFF48;
+
+        if ((currentScanline >= yPos) && (currentScanline < (yPos + 8)))
+        {
+            byte tileLine = currentScanline - yPos;
+            if (yFlip)
+            {
+                //convert from 0 - 7 to 7 - 0
+                tileLine = ((tileLine - 7) * -1);
+            }
+            ushort lineAddress = (0x8000 + (tileIdentifier * 16) + (tileLine * 2));
+            byte line1 = gpu::Memory->get8(lineAddress);
+            byte line2 = gpu::Memory->get8(lineAddress + 1);
+            if (xFlip)
+            {
+                line1 = reverseByte(line1);
+                line2 = reverseByte(line2);
+            }
+            for (int pixel = 0; pixel < 8; pixel++)
+            {
+                int colourIndex = ((pixel - 7) * -1);
+                byte colourNumber = ((getBit(line2, colourIndex) << 1) | getBit(line1, colourIndex));
+                //check for transparency before palette adjusting
+                if (colourNumber == 0)
+                {
+                    continue;
+                }
+                colourNumber = gpu::paletteAdjustColour(colourNumber, gpu::Memory->get8(spritePaletteAddress));
+                int pixelX = xPos + pixel;
+                //check if pixel is off the screen
+                if (pixelX > XResolution || pixelX < 0)
+                {
+                    continue;
+                }
+                int pixelIndex = ((pixelX * 3) + (currentScanline * XResolution * 3));
+                if (priority)
+                {
+                    //sprite is behind background
+                    if (!(screenData[pixelIndex] == colour0.r && screenData[pixelIndex + 1] == colour0.g && screenData[pixelIndex + 2] == colour0.b))
+                    {
+                        continue;
+                    }
+                }
+                gpu::drawPixel(pixelX, currentScanline, colourNumber);
+            }
+        }
     }
 }
 

@@ -20,6 +20,7 @@ class gpu
         void setLCDMode(int mode);
         void drawScanline();
         void drawBackground();
+        void drawSprites();
         byte paletteAdjustColour(byte colour, byte palette);
         void drawPixel(byte x, byte y, byte colour);
 };

@@ -7,3 +7,4 @@ byte highByte(ushort s);
 byte lowByte(ushort s);
 byte setBit(byte b, byte index, bool value);
 bool getBit(byte b, byte index);
+byte reverseByte(byte b);

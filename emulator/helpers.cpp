@@ -65,3 +65,11 @@ bool getBit(byte b, byte index)
     std::bitset<8> bits = b;
     return bits[index];
 }
+
+//Bitwise reverses a byte eg. 01 becomes 80
+byte reverseByte(byte b) {
+    return ((b & 0x1)  << 7) | ((b & 0x2)  << 5) |
+           ((b & 0x4)  << 3) | ((b & 0x8)  << 1) |
+           ((b & 0x10) >> 1) | ((b & 0x20) >> 3) |
+           ((b & 0x40) >> 5) | ((b & 0x80) >> 7);
+}
