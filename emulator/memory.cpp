@@ -98,7 +98,7 @@ void memory::set8(ushort address, byte value, bool force)
         else if (address >= 0xFEA0 && address < 0xFF00)
         {
             //unused area
-            logging::logerr(ushortToString(address) + " shouldn't be accessed!");
+            //logging::logerr(ushortToString(address) + " shouldn't be accessed! " + ushortToString(*PC));
             return;
         }
         else if (address >= 0xA000 && address < 0xC000)

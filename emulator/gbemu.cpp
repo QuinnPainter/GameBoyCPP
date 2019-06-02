@@ -52,13 +52,16 @@ int main (int argc, char** argv)
         Memory.init(cart);
         state.PC = 0x0100; //skip bootrom
         state.SP = 0xFFFE; //initialise stack pointer as bootrom would
+        state.AF = 0x01B0; //these init values are different between DMG, CGB and SGB - these are DMG
+        state.BC = 0x0013;
+        state.DE = 0x00D8;
+        state.HL = 0x014D;
         Memory.set8(0xFF50, 1, true); //unmap bootrom
     }
-    state.AF = 0x01B0; //these init values are different between DMG, CGB and SGB - these are DMG
-    state.BC = 0x0013;
-    state.DE = 0x00D8;
-    state.HL = 0x014D;
-    
+    Memory.set8(0xFF40, 0x91, true); //initialise video control registers
+    Memory.set8(0xFF47, 0xFC, true);
+    Memory.set8(0xFF48, 0xFF, true);
+    Memory.set8(0xFF49, 0xFF, true);
     initSDL();
 
     cpu CPU(state, &Memory);
@@ -68,8 +71,11 @@ int main (int argc, char** argv)
     int cycleCounter = 0;
     bool quit = false;
     SDL_Event event;
+    timePoint frameStart;
+    timePoint frameEnd;
     while(!quit)
     {
+        frameStart = Clock::now();
         while(SDL_PollEvent(&event) != 0)
         {
             switch((event).type)
@@ -84,6 +90,7 @@ int main (int argc, char** argv)
         cycleCounter = 0;
         while (cycleCounter < clocksPerFrame)
         {
+            Memory.set8(0xFF00, Memory.get8(0xFF00) | 0xF, true); //set all buttons to off - temporary
             instrInfo info;
             if (!CPU.getState().HALTED)
             {
@@ -99,7 +106,13 @@ int main (int argc, char** argv)
             handleInterrupts(&CPU, &Memory);
         }
         GPU.displayScreen();
-        SDL_Delay(1000/framerate);
+        frameEnd = Clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( frameEnd - frameStart ).count();
+        int delay = (1000/framerate) - duration;
+        if (delay > 0)
+        {
+            SDL_Delay(delay);
+        }
     }
 
     //cleanup before exit here

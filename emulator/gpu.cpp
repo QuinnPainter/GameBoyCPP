@@ -202,8 +202,6 @@ void gpu::drawBackground()
     byte control = gpu::Memory->get8(0xFF40);
     byte currentScanline = gpu::Memory->get8(0xFF44);
 
-    bool drawingWindow = (getBit(control, 5) && (windowY <= currentScanline));
-
     ushort tileData;
     ushort tileMap;
     bool isSigned;
@@ -218,16 +216,32 @@ void gpu::drawBackground()
         tileData = 0x8800;
         isSigned = true;
     }
-
-    bool dataBank;
-
-    dataBank = drawingWindow ? getBit(control, 6) : getBit(control, 3);
-    tileMap = dataBank ? 0x9C00 : 0x9800;
-
-    byte adjustedY = currentScanline;
+    
     for (int x = 0; x < XResolution; x++)
     {
-        byte adjustedX = x;
+        bool drawingWindow = (getBit(control, 5) && (windowY <= currentScanline) && (x >= windowX));
+        bool dataBank = drawingWindow ? getBit(control, 6) : getBit(control, 3);
+        tileMap = dataBank ? 0x9C00 : 0x9800;
+
+        byte adjustedY;
+        if (!drawingWindow)
+        {
+            adjustedY = currentScanline + scrollY;
+        }
+        else
+        {
+            adjustedY = currentScanline - windowY;
+        }
+        byte adjustedX;
+        if (drawingWindow)
+        {
+            adjustedX = x - windowX;
+        }
+        else
+        {
+            adjustedX = x + scrollX;
+        }
+        
         byte tileIdentifier = gpu::Memory->get8(tileMap + (adjustedX/8) + ((byte)(adjustedY/8) * 32));
         ushort tileAddress;
         if (isSigned)

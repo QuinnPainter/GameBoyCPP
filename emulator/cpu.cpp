@@ -649,13 +649,14 @@ instrInfo cpu::emulateOp()
 
 instrInfo cpu::step()
 {
-    if(false)//if (cpu::state.PC == 0xC246) //breakpoint
+    if(false)//if (cpu::state.PC == 0x0286) //breakpoint
     {
         debug = true;
     }
     if (debug)
     {
-        std::cin.ignore();
+        //std::cin.ignore();
+        SDL_Delay(100);
         logging::log("AF: " + ushortToString(cpu::state.AF), false);
         logging::log(" BC: " + ushortToString(cpu::state.BC), false);
         logging::log(" DE: " + ushortToString(cpu::state.DE), false);
