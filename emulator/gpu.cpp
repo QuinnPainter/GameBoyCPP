@@ -319,8 +319,25 @@ void gpu::drawSprites()
                 int pixelIndex = ((pixelX * 3) + (currentScanline * XResolution * 3));
                 if (priority)
                 {
+                    byte newColour = gpu::paletteAdjustColour(0, gpu::Memory->get8(0xFF47));
+                    SDL_Color pixColour;
+                    switch (newColour)
+                    {
+                        case 0:
+                            pixColour = colour0;
+                            break;
+                        case 1:
+                            pixColour = colour1;
+                            break;
+                        case 2:
+                            pixColour = colour2;
+                            break;
+                        case 3:
+                            pixColour = colour3;
+                            break;
+                    }
                     //sprite is behind background
-                    if (!(screenData[pixelIndex] == colour0.r && screenData[pixelIndex + 1] == colour0.g && screenData[pixelIndex + 2] == colour0.b))
+                    if (!(screenData[pixelIndex] == pixColour.r && screenData[pixelIndex + 1] == pixColour.g && screenData[pixelIndex + 2] == pixColour.b))
                     {
                         continue;
                     }
