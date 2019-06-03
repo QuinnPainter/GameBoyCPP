@@ -43,8 +43,9 @@ memory::~memory()
     }
 }
 
-void memory::init(byte* rom, byte* bootrom)
+void memory::init(byte* rom, byte* input, byte* bootrom)
 {
+    memory::inputState = input;
     memcpy(memory::memBytes, rom, 0x8000);
     if (bootrom != nullptr)
     {
@@ -75,7 +76,26 @@ byte memory::get8(ushort address)
         //cartridge RAM       this will need to be accessible when I implement banking
         return 0xFF;
     }
+    if (address == 0xFF00)
+    {
+        updateInput();
+    }
     return memory::memBytes[fixMemAddress(address)];
+}
+
+void memory::updateInput()
+{
+    byte inputReg = (memory::memBytes[0xFF00] & 0xF0); //Reset last 4 bits
+    bool directionSelected = !getBit(inputReg, 4);
+    bool buttonSelected = !getBit(inputReg, 5);
+    if (directionSelected)
+    {
+        memory::set8(0xFF00, inputReg | (*(memory::inputState) >> 4), true);
+    }
+    else if (buttonSelected)
+    {
+        memory::set8(0xFF00, inputReg | (*(memory::inputState) & 0xF), true);
+    }
 }
 
 void memory::set8(ushort address, byte value, bool force)
@@ -117,11 +137,18 @@ void memory::set8(ushort address, byte value, bool force)
             //reset current scanline register
             memory::memBytes[0xFF44] = 0;
             return;
-        } 
+        }
         else if (address == 0xFF46)
         {
             //DMA block of memory
             memory::doDMA(value);
+            return;
+        }
+        else if (address == 0xFF00)
+        {
+            //input register - only set bits 4 and 5
+            memory::memBytes[0xFF00] = setBit(memory::memBytes[0xFF00], 4, getBit(value, 4));
+            memory::memBytes[0xFF00] = setBit(memory::memBytes[0xFF00], 5, getBit(value, 5));
             return;
         }
     }

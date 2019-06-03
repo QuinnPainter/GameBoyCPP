@@ -32,6 +32,7 @@ int main (int argc, char** argv)
 
     memory Memory{};
     cpuState state{};
+    input Input(&Memory);
     if (argv[2] != NULL)
     {
         //Load the bootrom
@@ -43,13 +44,13 @@ int main (int argc, char** argv)
     	}
         fread(bootrom, 256, 1, f);
         fclose(f);
-        Memory.init(cart, bootrom);
+        Memory.init(cart, &(Input.inputState), bootrom);
         delete[] bootrom;
         //no need to initialize cpu state if bootrom is present
     }
     else
     {
-        Memory.init(cart);
+        Memory.init(cart, &(Input.inputState));
         state.PC = 0x0100; //skip bootrom
         state.SP = 0xFFFE; //initialise stack pointer as bootrom would
         state.AF = 0x01B0; //these init values are different between DMG, CGB and SGB - these are DMG
@@ -62,6 +63,8 @@ int main (int argc, char** argv)
     Memory.set8(0xFF47, 0xFC, true);
     Memory.set8(0xFF48, 0xFF, true);
     Memory.set8(0xFF49, 0xFF, true);
+
+    Memory.set8(0xFF00, 0xCF, true); //initialise input register
     initSDL();
 
     cpu CPU(state, &Memory);
@@ -78,11 +81,21 @@ int main (int argc, char** argv)
         frameStart = Clock::now();
         while(SDL_PollEvent(&event) != 0)
         {
-            switch((event).type)
+            switch(event.type)
             {
                 case SDL_QUIT:
                 {
                     quit = true;
+                    break;
+                }
+                case SDL_KEYDOWN:
+                {
+                    Input.keyChanged(event.key.keysym.sym, 0);
+                    break;
+                }
+                case SDL_KEYUP:
+                {
+                    Input.keyChanged(event.key.keysym.sym, 1);
                     break;
                 }
             }
@@ -90,7 +103,6 @@ int main (int argc, char** argv)
         cycleCounter = 0;
         while (cycleCounter < clocksPerFrame)
         {
-            Memory.set8(0xFF00, Memory.get8(0xFF00) | 0xF, true); //set all buttons to off - temporary
             instrInfo info;
             if (!CPU.getState().HALTED)
             {
@@ -108,7 +120,7 @@ int main (int argc, char** argv)
         GPU.displayScreen();
         frameEnd = Clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( frameEnd - frameStart ).count();
-        int delay = (1000/framerate) - duration;
+        int delay = ((1000/framerate) - duration);
         if (delay > 0)
         {
             SDL_Delay(delay);
