@@ -11,6 +11,7 @@ class memory
         void set16 (ushort address, ushort value);
         ushort get16 (ushort address);
     private:
+        bool bootromMapped;
         byte* inputState;
         byte* memBytes;
         byte* bootrom;

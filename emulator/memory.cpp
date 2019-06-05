@@ -49,14 +49,19 @@ void memory::init(byte* rom, byte* input, byte* bootrom)
     memcpy(memory::memBytes, rom, 0x8000);
     if (bootrom != nullptr)
     {
+        memory::bootromMapped = true;
         memory::bootrom = new byte[256];
         memcpy(memory::bootrom, bootrom, 256);
+    }
+    else
+    {
+        memory::bootromMapped = false;
     }
 }
 
 byte memory::get8(ushort address)
 {
-    if (address <= 0x00FF && memory::memBytes[0xFF50] != 1)
+    if (address <= 0x00FF && memory::bootromMapped)
     {
         //if 0xFF50 is not 1, reading 0 to FF (255) gives the bootrom
         return memory::bootrom[address];
@@ -75,6 +80,11 @@ byte memory::get8(ushort address)
     {
         //cartridge RAM       this will need to be accessible when I implement banking
         return 0xFF;
+    }
+    if (address == 0xFF02)
+    {
+        //serial control register
+        return 0x7E;
     }
     if (address == 0xFF00)
     {
@@ -104,15 +114,18 @@ void memory::set8(ushort address, byte value, bool force)
     //it should only be used for internal stuff
     if (!force)
     {
-        if (address <= 0x00FF && memory::memBytes[0xFF50] != 1)
+        if (address <= 0x00FF && memory::bootromMapped)
         {
             //if 0xFF50 is not 1, reading 0 to FF (255) gives the bootrom
             return;
         }
         else if (address >= 0xFF4C && address < 0xFF80)
         {
-            //unused area, may as well set it anyway - need FF50 for bootrom
-            memory::memBytes[fixMemAddress(address)] = value;
+            if (address == 0xFF50 && value == 1)
+            {
+                memory::bootromMapped = false;
+            }
+            //unused IO area
             return;
         }
         else if (address >= 0xFEA0 && address < 0xFF00)

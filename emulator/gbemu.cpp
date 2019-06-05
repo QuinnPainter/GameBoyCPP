@@ -57,7 +57,6 @@ int main (int argc, char** argv)
         state.BC = 0x0013;
         state.DE = 0x00D8;
         state.HL = 0x014D;
-        Memory.set8(0xFF50, 1, true); //unmap bootrom
     }
     Memory.set8(0xFF40, 0x91, true); //initialise video control registers
     Memory.set8(0xFF47, 0xFC, true);
