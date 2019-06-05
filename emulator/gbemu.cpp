@@ -102,6 +102,8 @@ int main (int argc, char** argv)
         cycleCounter = 0;
         while (cycleCounter < clocksPerFrame)
         {
+            //interrupt handling happens first
+            cycleCounter += handleInterrupts(&CPU, &Memory);
             instrInfo info;
             if (!CPU.getState().HALTED)
             {
@@ -114,7 +116,6 @@ int main (int argc, char** argv)
             cycleCounter += info.numCycles;
             handleTimers(info.numCycles, &Memory);
             GPU.update(info.numCycles);
-            handleInterrupts(&CPU, &Memory);
         }
         GPU.displayScreen();
         frameEnd = Clock::now();
@@ -140,55 +141,71 @@ int main (int argc, char** argv)
 //4 = Joypad
 //Interrupt enable register  : 0xFFFF
 //Interrupt request register : 0xFF0F
-void handleInterrupts(cpu* CPU, memory* mem)
+byte handleInterrupts(cpu* CPU, memory* mem)
 {
     byte enabled = mem->get8(0xFFFF);
     byte requested = mem->get8(0xFF0F);
+    bool unhalt = false;
+    byte cycles = 0;
     if (getBit(requested, 0) && getBit(enabled, 0))
     {
         if (CPU->getState().IME)
         {
+            cycles += 20;
             mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 0, 0));
             CPU->serviceInterrupt(V_Blank_interrupt);
         }
-        CPU->unhalt();
+        unhalt = true;
     }
     else if (getBit(requested, 1) && getBit(enabled, 1))
     {
         if (CPU->getState().IME)
         {
+            cycles += 20;
             mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 1, 0));
             CPU->serviceInterrupt(LCD_interrupt);
         }
-        CPU->unhalt();
+        unhalt = true;
     }
     else if (getBit(requested, 2) && getBit(enabled, 2))
     {
         if (CPU->getState().IME)
         {
+            cycles += 20;
             mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 2, 0));
             CPU->serviceInterrupt(Timer_interrupt);
         }
-        CPU->unhalt();
+        unhalt = true;
     }
     else if (getBit(requested, 3) && getBit(enabled, 3))
     {
         if (CPU->getState().IME)
         {
+            cycles += 20;
             mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 3, 0));
             CPU->serviceInterrupt(Serial_interrupt);
         }
-        CPU->unhalt();
+        unhalt = true;
     }
     else if (getBit(requested, 4) && getBit(enabled, 4))
     {
         if (CPU->getState().IME)
         {
+            cycles += 20;
             mem->set8(0xFF0F, setBit(mem->get8(0xFF0F), 4, 0));
             CPU->serviceInterrupt(Joypad_interrupt);
         }
-        CPU->unhalt();
+        unhalt = true;
     }
+    if (unhalt)
+    {
+        if (CPU->getState().HALTED)
+        {
+            cycles += 4;
+            CPU->unhalt();
+        }
+    }
+    return cycles;
 }
 
 void handleTimers(int cycles, memory* mem)

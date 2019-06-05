@@ -81,11 +81,6 @@ byte memory::get8(ushort address)
         //cartridge RAM       this will need to be accessible when I implement banking
         return 0xFF;
     }
-    if (address == 0xFF02)
-    {
-        //serial control register
-        return 0x7E;
-    }
     if (address == 0xFF00)
     {
         updateInput();
@@ -162,6 +157,36 @@ void memory::set8(ushort address, byte value, bool force)
             //input register - only set bits 4 and 5
             memory::memBytes[0xFF00] = setBit(memory::memBytes[0xFF00], 4, getBit(value, 4));
             memory::memBytes[0xFF00] = setBit(memory::memBytes[0xFF00], 5, getBit(value, 5));
+            return;
+        }
+        else if (address == 0xFF02)
+        {
+            //serial control register
+            memory::memBytes[0xFF02] = value | 0x7E;
+            return;
+        }
+        else if (address == 0xFF07)
+        {
+            //timer control register
+            memory::memBytes[0xFF07] = value | 0xF8;
+            return;
+        }
+        else if (address == 0xFF07)
+        {
+            //timer control register
+            memory::memBytes[0xFF07] = value | 0xF8;
+            return;
+        }
+        else if (address == 0xFF0F)
+        {
+            //interrupt request register
+            memory::memBytes[0xFF0F] = value | 0xE0;
+            return;
+        }
+        else if (address == 0xFF41)
+        {
+            //LCD status register
+            memory::memBytes[0xFF41] = value | 0x80;
             return;
         }
     }

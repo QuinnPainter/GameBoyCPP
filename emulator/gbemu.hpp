@@ -6,5 +6,5 @@
 #include "input.hpp"
 
 void initSDL();
-void handleInterrupts(cpu* CPU, memory* mem);
+byte handleInterrupts(cpu* CPU, memory* mem);
 void handleTimers(int cycles, memory* mem);
