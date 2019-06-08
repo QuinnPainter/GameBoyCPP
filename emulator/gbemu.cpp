@@ -231,15 +231,15 @@ void handleTimers(int cycles, memory* mem)
     if (TimerFrequency != newFrequency)
     {
         TimerFrequency = newFrequency;
-        TimerCounter = newFrequency;
+        TimerCounter = (clockspeed / TimerFrequency);
         return;
     }
     if (enabled)
     {
-        TimerCounter -= (clockspeed / cycles);
+        TimerCounter -= cycles;
         if (TimerCounter <= 0)
         {
-            TimerCounter = TimerFrequency;
+            TimerCounter = (clockspeed / TimerFrequency);
             if (mem->get8(0xFF05) == 0xFF) //about to overflow
             {
                 mem->set8(0xFF05, mem->get8(0xFF06));

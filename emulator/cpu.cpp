@@ -649,7 +649,7 @@ instrInfo cpu::emulateOp()
 
 instrInfo cpu::step()
 {
-    if(false)//if (cpu::state.PC == 0x0286) //breakpoint
+    if(false)//if (cpu::state.PC == 0x0028) //breakpoint
     {
         debug = true;
     }
@@ -683,6 +683,10 @@ instrInfo cpu::step()
     if (info.incPC)
     {
         cpu::state.PC += info.numBytes;
+    }
+    if(false)//else if (cpu::state.PC > 0x7FFF)
+    {
+        logging::log("what " + ushortToString(cpu::state.PC) + " " + ushortToString(pc));
     }
     return info;
 }
@@ -856,8 +860,7 @@ instrInfo cpu::PUSH_QQ(ushort* regPair)
 //Pops from the stack into regPair
 instrInfo cpu::POP_QQ(ushort* regPair)
 {
-    *regPair = combineBytes(cpu::Memory->get8(cpu::state.SP + 1), cpu::Memory->get8(cpu::state.SP));
-    cpu::state.SP += 2;
+    *regPair = cpu::popOffStack();
     cpu::state.F &= 0xF0; //just in case F was changed, make sure last 4 bits are 0
     return {1,12};
 }
@@ -1292,8 +1295,7 @@ instrInfo cpu::JP_CC_NN(bool condition, ushort dest)
 {
     if (condition)
     {
-        cpu::state.PC = dest;
-        return {3,16,false};
+        return cpu::JP_NN(dest);
     }
     return {3,12,true};
 }
@@ -1309,16 +1311,14 @@ instrInfo cpu::JR_CC_E(bool condition, byte dest)
 {
     if (condition)
     {
-        sbyte relativeDest = static_cast<sbyte>(dest);
-        cpu::state.PC = cpu::state.PC + 2 + relativeDest;
-        return {2,12,false};
+        return cpu::JR_E(dest);
     }
     return {2,8,true};
 }
 //Jumps to the memory address in HL
 instrInfo cpu::JP_HL()
 {
-    cpu::state.PC = cpu::state.HL;
+    cpu::JP_NN(cpu::state.HL);
     return {1,4,false};
 }
 

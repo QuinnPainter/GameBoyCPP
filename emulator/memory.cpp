@@ -171,12 +171,6 @@ void memory::set8(ushort address, byte value, bool force)
             memory::memBytes[0xFF07] = value | 0xF8;
             return;
         }
-        else if (address == 0xFF07)
-        {
-            //timer control register
-            memory::memBytes[0xFF07] = value | 0xF8;
-            return;
-        }
         else if (address == 0xFF0F)
         {
             //interrupt request register
