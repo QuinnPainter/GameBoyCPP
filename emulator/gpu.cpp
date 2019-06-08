@@ -58,16 +58,26 @@ gpu::gpu(memory* mem)
     {
         logging::logerr("Window could not be created! SDL_Error: " + std::string(SDL_GetError()));
     }
+    /*
     gpu::screenSurface = SDL_GetWindowSurface(gpu::window);
     if (gpu::screenSurface == NULL)
     {
         logging::logerr("Surface could not be created! SDL_Error: " + std::string(SDL_GetError()));
     }
+    */
+    gpu::screenRenderer = SDL_CreateRenderer(gpu::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (gpu::screenRenderer == NULL)
+    {
+        logging::logerr("Renderer could not be created! SDL_Error: " + std::string(SDL_GetError()));
+    }
+    gpu::screenTexture = SDL_CreateTexture(gpu::screenRenderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, XResolution, YResolution);
 }
 
 gpu::~gpu()
 {
-    SDL_FreeSurface(gpu::screenBuffer);
+    SDL_DestroyTexture(gpu::screenTexture);
+    SDL_DestroyRenderer(gpu::screenRenderer);
+    //SDL_FreeSurface(gpu::screenBuffer);
     SDL_DestroyWindow(gpu::window);
 }
 
@@ -386,7 +396,12 @@ void gpu::drawPixel(byte x, byte y, byte colour)
 
 void gpu::displayScreen()
 {
+    /*
     gpu::screenBuffer = SDL_CreateRGBSurfaceWithFormatFrom(gpu::screenData, XResolution, YResolution, 24, XResolution * 3, SDL_PIXELFORMAT_RGB24);
     SDL_BlitScaled(gpu::screenBuffer, NULL, gpu::screenSurface, NULL);
     SDL_UpdateWindowSurface(gpu::window);
+    */
+    SDL_UpdateTexture(gpu::screenTexture, NULL, gpu::screenData, XResolution * 3);
+    SDL_RenderCopy(gpu::screenRenderer, gpu::screenTexture, NULL, NULL);
+    SDL_RenderPresent(gpu::screenRenderer);
 }

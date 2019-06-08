@@ -83,7 +83,7 @@ byte memory::get8(ushort address)
     }
     if (address == 0xFF00)
     {
-        updateInput();
+        memory::updateInput();
     }
     return memory::memBytes[fixMemAddress(address)];
 }

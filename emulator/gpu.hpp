@@ -13,8 +13,10 @@ class gpu
         memory* Memory;
         SDL_Window* window;
         byte screenData[160 * 144 * 3]{};
-        SDL_Surface* screenSurface;
-        SDL_Surface* screenBuffer;
+        //SDL_Surface* screenSurface;
+        //SDL_Surface* screenBuffer;
+        SDL_Texture* screenTexture;
+        SDL_Renderer* screenRenderer;
         int cycleCounter;
         void setStatus();
         void setLCDMode(int mode);

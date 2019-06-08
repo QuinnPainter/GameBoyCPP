@@ -6,7 +6,7 @@ const int clockspeed = 4194304; //number of clock cycles in a second / speed of 
 const int framerate = 60; //framerate to run emulator at. native gameboy is 60
 
 //Timers
-int DividerCounter;
+int DividerCounter = 0;
 int TimerFrequency = 4096;
 int TimerCounter = 4096;
 
@@ -73,11 +73,11 @@ int main (int argc, char** argv)
     int cycleCounter = 0;
     bool quit = false;
     SDL_Event event;
-    timePoint frameStart;
-    timePoint frameEnd;
+    //timePoint frameStart;
+    //timePoint frameEnd;
     while(!quit)
     {
-        frameStart = Clock::now();
+        //frameStart = Clock::now();
         while(SDL_PollEvent(&event) != 0)
         {
             switch(event.type)
@@ -118,6 +118,7 @@ int main (int argc, char** argv)
             GPU.update(info.numCycles);
         }
         GPU.displayScreen();
+        /*
         frameEnd = Clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( frameEnd - frameStart ).count();
         int delay = ((1000/framerate) - duration);
@@ -125,6 +126,7 @@ int main (int argc, char** argv)
         {
             SDL_Delay(delay);
         }
+        */
     }
 
     //cleanup before exit here
