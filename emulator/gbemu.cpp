@@ -8,7 +8,7 @@ const int framerate = 60; //framerate to run emulator at. native gameboy is 60
 //Timers
 int DividerCounter = 0;
 int TimerFrequency = 4096;
-int TimerCounter = 4096;
+int TimerCounter = 0;
 
 //arg 1 is game rom, arg 2 is bootrom
 int main (int argc, char** argv)
