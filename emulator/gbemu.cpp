@@ -33,10 +33,10 @@ int main (int argc, char** argv)
     memory Memory{};
     cpuState state{};
     input Input(&Memory);
+    byte* bootrom = new byte[256];
     if (argv[2] != NULL)
     {
         //Load the bootrom
-        byte* bootrom = new byte[256];
 	    f = fopen(argv[2], "rb");
 	    if (f==NULL)
 	    {
@@ -45,7 +45,6 @@ int main (int argc, char** argv)
         fread(bootrom, 256, 1, f);
         fclose(f);
         Memory.init(cart, &(Input.inputState), &TimerCounter, bootrom);
-        delete[] bootrom;
         //no need to initialize cpu state if bootrom is present
     }
     else
@@ -131,6 +130,8 @@ int main (int argc, char** argv)
 
     //cleanup before exit here
     SDL_Quit();
+    delete[] cart;
+    delete[] bootrom;
     logging::log("Exited successfully");
     return 0;
 }

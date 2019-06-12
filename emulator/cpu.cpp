@@ -649,7 +649,7 @@ instrInfo cpu::emulateOp()
 
 instrInfo cpu::step()
 {
-    if(false)//if (cpu::state.PC == 0x0028) //breakpoint
+    if(false)//if (cpu::state.PC == 0x15bc) //breakpoint
     {
         debug = true;
     }
@@ -781,6 +781,10 @@ instrInfo cpu::LD_A_N(byte n)
 //Copies A into the memory address (FF00 + n)
 instrInfo cpu::LD_N_A(byte n)
 {
+    /*if (n == 0xe1)
+    {
+        logging::log(ushortToString(cpu::state.PC) + " " + byteToString(cpu::state.A));
+    }*/
     cpu::Memory->set8(0xFF00 + n, cpu::state.A);
     return {2,12};
 }
