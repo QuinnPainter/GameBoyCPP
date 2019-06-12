@@ -40,8 +40,8 @@ $FE00-$FE9F 	OAM - Object Attribute Memory (Sprite Data)
 */
 
 const SDL_Color colour0 = {255,255,255,SDL_ALPHA_OPAQUE};  //00: White
-const SDL_Color colour1 = {200,200,200,SDL_ALPHA_OPAQUE};  //01: Light Grey
-const SDL_Color colour2 = {100,100,100,SDL_ALPHA_OPAQUE};  //10: Dark Grey
+const SDL_Color colour1 = {170,170,170,SDL_ALPHA_OPAQUE};  //01: Light Grey
+const SDL_Color colour2 = {85,85,85,SDL_ALPHA_OPAQUE};  //10: Dark Grey
 const SDL_Color colour3 = {000,000,000,SDL_ALPHA_OPAQUE};  //11: Black
 const int XResolution = 160;
 const int YResolution = 144;

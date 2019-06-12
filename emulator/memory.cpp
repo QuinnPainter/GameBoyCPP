@@ -43,9 +43,10 @@ memory::~memory()
     }
 }
 
-void memory::init(byte* rom, byte* input, byte* bootrom)
+void memory::init(byte* rom, byte* input, int* timer, byte* bootrom)
 {
     memory::inputState = input;
+    memory::timerCounter = timer;
     memcpy(memory::memBytes, rom, 0x8000);
     if (bootrom != nullptr)
     {
@@ -136,8 +137,9 @@ void memory::set8(ushort address, byte value, bool force)
         }
         else if (address == 0xFF04)
         {
-            //reset divider register
+            //reset divider register - also resets timer counter
             memory::memBytes[0xFF04] = 0;
+            *(memory::timerCounter) = 0;
             return;
         }
         else if (address == 0xFF44)
@@ -163,6 +165,10 @@ void memory::set8(ushort address, byte value, bool force)
         {
             //serial control register
             memory::memBytes[0xFF02] = value | 0x7E;
+            if (value == 0x81)
+            {
+                logging::log(std::string(1, memory::get8(0xFF01)), false);
+            }
             return;
         }
         else if (address == 0xFF07)
@@ -184,10 +190,6 @@ void memory::set8(ushort address, byte value, bool force)
             return;
         }
     }
-    if (address == 0xFF02 && value == 0x81) //serial port / link cable
-    {
-        logging::log(std::string(1, memory::get8(0xFF01)), false);
-    }
     memory::memBytes[fixMemAddress(address)] = value;
 }
 
@@ -205,7 +207,7 @@ void memory::set16(ushort address, ushort value)
 //Copies given block of data into the OAM
 void memory::doDMA(byte value)
 {
-    ushort address = value << 8;
+    ushort address = memory::fixMemAddress(value << 8);
     for (int i = 0; i < 0xA0; i++)
     {
         memory::set8(0xFE00 + i, memory::get8(address + i));

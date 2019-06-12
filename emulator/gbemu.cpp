@@ -44,13 +44,13 @@ int main (int argc, char** argv)
     	}
         fread(bootrom, 256, 1, f);
         fclose(f);
-        Memory.init(cart, &(Input.inputState), bootrom);
+        Memory.init(cart, &(Input.inputState), &TimerCounter, bootrom);
         delete[] bootrom;
         //no need to initialize cpu state if bootrom is present
     }
     else
     {
-        Memory.init(cart, &(Input.inputState));
+        Memory.init(cart, &(Input.inputState), &TimerCounter);
         state.PC = 0x0100; //skip bootrom
         state.SP = 0xFFFE; //initialise stack pointer as bootrom would
         state.AF = 0x01B0; //these init values are different between DMG, CGB and SGB - these are DMG
@@ -233,15 +233,15 @@ void handleTimers(int cycles, memory* mem)
     if (TimerFrequency != newFrequency)
     {
         TimerFrequency = newFrequency;
-        TimerCounter = (clockspeed / TimerFrequency);
+        TimerCounter = 0;
         return;
     }
     if (enabled)
     {
-        TimerCounter -= cycles;
-        if (TimerCounter <= 0)
+        TimerCounter += cycles;
+        if (TimerCounter >= (clockspeed / TimerFrequency))
         {
-            TimerCounter = (clockspeed / TimerFrequency);
+            TimerCounter = 0;
             if (mem->get8(0xFF05) == 0xFF) //about to overflow
             {
                 mem->set8(0xFF05, mem->get8(0xFF06));
