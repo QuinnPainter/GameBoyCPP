@@ -28,6 +28,9 @@ class memory
         //MBC stuff
         mbc mbcVersion;
         unsigned int romSize;
+        unsigned int ramSize;
+        bool ramEnabled;
+        byte* cartRam;
         byte* rom;
         byte romBank;
         byte upperBits;

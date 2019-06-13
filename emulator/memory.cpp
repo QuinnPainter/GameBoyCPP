@@ -36,6 +36,7 @@ memory::memory()
 
 memory::~memory()
 {
+    delete[] memory::cartRam;
     delete[] memory::memBytes;
 }
 
@@ -54,6 +55,7 @@ void memory::init(byte* gameRom, byte* input, int* timer, byte* bootrom)
     {
         memory::bootromMapped = false;
     }
+    memory::ramEnabled = false;
     switch (memory::rom[0x0147])
     {
         case 0x00:
@@ -71,15 +73,16 @@ void memory::init(byte* gameRom, byte* input, int* timer, byte* bootrom)
             break;
     }
     memory::romSize = (32768 << memory::rom[0x0148]);
-    /*
-    switch (memory::rom[0x0148])
+    switch (memory::rom[0x0149])
     {
-        case 0x00: memory::romSize = 32768; break;
-        case 0x01: memory::romSize = 65536; break;
-        case 0x02: memory::romSize = 131072; break;
-        case 0x03: memory::romSize = 262144; break;
-        case 0x04: memory::romSize = 
-    }*/
+        case 0x00: memory::ramSize = 0; break;
+        case 0x01: memory::ramSize = 2048; break;
+        case 0x02: memory::ramSize = 8192; break;
+        case 0x03: memory::ramSize = 32768; break;
+        case 0x04: memory::ramSize = 131072; break;
+        case 0x05: memory::ramSize = 65536; break;
+    }
+    cartRam = new byte[memory::ramSize];
 }
 
 byte memory::get8(ushort address)
@@ -101,8 +104,30 @@ byte memory::get8(ushort address)
     }
     if (address >= 0xA000 && address < 0xC000)
     {
-        //cartridge RAM       this will need to be accessible when I implement banking
-        return 0xFF;
+        //cartridge RAM
+        switch (mbcVersion)
+        {
+            case (MBC_MBC1):
+            {
+                if (!ramEnabled)
+                {
+                    return 0xFF;
+                }
+                byte ramBank = memory::mbcMode ? memory::upperBits : 0;
+                unsigned int adjustedAddress = ((ramBank * 8192) + (address - 0xA000));
+                if (adjustedAddress >= memory::ramSize)
+                {
+                    //selected bank is outside of range of available ram
+                    //todo : find out what this is meant to do
+                    return 0xFF;
+                }
+                return memory::cartRam[adjustedAddress];
+            }
+            default:
+            {
+                return 0xFF;
+            }
+        }
     }
     if (address < 0x8000)
     {
@@ -184,11 +209,6 @@ void memory::set8(ushort address, byte value, bool force)
             //logging::logerr(ushortToString(address) + " shouldn't be accessed! " + ushortToString(*PC));
             return;
         }
-        if (address >= 0xA000 && address < 0xC000)
-        {
-            //cartridge RAM       this will need to be accessible when I implement banking
-            return;
-        }
         if (address == 0xFF04)
         {
             //reset divider register - also resets timer counter
@@ -244,6 +264,34 @@ void memory::set8(ushort address, byte value, bool force)
             return;
         }
 
+        //cartridge RAM
+        if (address >= 0xA000 && address < 0xC000)
+        {
+            switch (mbcVersion)
+            {
+                case (MBC_MBC1):
+                {
+                    if (!ramEnabled)
+                    {
+                        return;
+                    }
+                    byte ramBank = memory::mbcMode ? memory::upperBits : 0;
+                    unsigned int adjustedAddress = ((ramBank * 8192) + (address - 0xA000));
+                    if (adjustedAddress >= memory::ramSize)
+                    {
+                        //selected bank is outside of range of available ram
+                        //todo : find out what this is meant to do
+                        return;
+                    }
+                    memory::cartRam[adjustedAddress] = value;
+                }
+                default:
+                {
+                    return;
+                }
+            }
+        }
+
         //ROM area
         if (address < 0x8000)
         {
@@ -255,7 +303,11 @@ void memory::set8(ushort address, byte value, bool force)
                 }
                 case (MBC_MBC1):
                 {
-                    if (address >= 0x2000 && address < 0x4000)
+                    if (address < 0x2000)
+                    {
+                        memory::ramEnabled = ((value & 0xF) == 0xA);
+                    }
+                    else if (address >= 0x2000 && address < 0x4000)
                     {
                         byte adjustedValue = (value & 0x1F);
                         if (adjustedValue == 0x00 || adjustedValue == 0x20 || adjustedValue == 0x40 || adjustedValue == 0x60)
