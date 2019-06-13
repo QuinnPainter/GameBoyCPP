@@ -39,10 +39,18 @@ $9C00-$9FFF 	BG Map Data 2
 $FE00-$FE9F 	OAM - Object Attribute Memory (Sprite Data)
 */
 
+/*
+//Black and White Colour Scheme
 const SDL_Color colour0 = {255,255,255,SDL_ALPHA_OPAQUE};  //00: White
 const SDL_Color colour1 = {170,170,170,SDL_ALPHA_OPAQUE};  //01: Light Grey
 const SDL_Color colour2 = {85,85,85,SDL_ALPHA_OPAQUE};  //10: Dark Grey
 const SDL_Color colour3 = {000,000,000,SDL_ALPHA_OPAQUE};  //11: Black
+*/
+//Green Colour Scheme
+const SDL_Color colour0 = {224,248,208,SDL_ALPHA_OPAQUE};  //00: White
+const SDL_Color colour1 = {136,192,112,SDL_ALPHA_OPAQUE};  //01: Light Grey
+const SDL_Color colour2 = {52,104,86,SDL_ALPHA_OPAQUE};  //10: Dark Grey
+const SDL_Color colour3 = {8,24,32,SDL_ALPHA_OPAQUE};  //11: Black
 const int XResolution = 160;
 const int YResolution = 144;
 const int Scale = 2;
@@ -278,8 +286,8 @@ void gpu::drawBackground()
 
 void gpu::drawSprites()
 {
-    //TODO : 8x16 sprite mode
     byte currentScanline = gpu::Memory->get8(0xFF44);
+    byte spriteSize = getBit(gpu::Memory->get8(0xFF40), 2) ? 16 : 8;
     //do sprites backwards for semi-correct depth priorities
     for (int spriteNum = 39; spriteNum >= 0; spriteNum--)
     {
@@ -294,13 +302,20 @@ void gpu::drawSprites()
         bool xFlip = getBit(attributes, 5);
         ushort spritePaletteAddress = getBit(attributes, 4) ? 0xFF49 : 0xFF48;
 
-        if ((currentScanline >= yPos) && (currentScanline < (yPos + 8)))
+        if (spriteSize == 16)
+        {
+            //last bit of tileIdentifier is ignored in 8x16 mode
+            tileIdentifier = setBit(tileIdentifier, 0, 0);
+        }
+
+        if ((currentScanline >= yPos) && (currentScanline < (yPos + spriteSize)))
         {
             byte tileLine = currentScanline - yPos;
             if (yFlip)
             {
                 //convert from 0 - 7 to 7 - 0
-                tileLine = ((tileLine - 7) * -1);
+                //or 0 - 15 to 15 - 0
+                tileLine = ((tileLine - (spriteSize - 1)) * -1);
             }
             ushort lineAddress = (0x8000 + (tileIdentifier * 16) + (tileLine * 2));
             byte line1 = gpu::Memory->get8(lineAddress);
