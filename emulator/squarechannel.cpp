@@ -104,15 +104,19 @@ void squareChannel::volumeEnvelopeClock()
             squareChannel::volumeEnvelopeCounter = squareChannel::volumeEnvelopePeriod;
             if (squareChannel::volumeEnvelopeCounter == 0)
             {
+                //?????
                 squareChannel::volumeEnvelopeCounter = 8;
             }
-            if (squareChannel::volumeEnvelopeMode)
+            if (squareChannel::volumeEnvelopePeriod != 0)
             {
-                squareChannel::volume++;
-            }
-            else
-            {
-                squareChannel::volume--;
+                if (squareChannel::volumeEnvelopeMode)
+                {
+                    squareChannel::volume++;
+                }
+                else
+                {
+                    squareChannel::volume--;
+                }
             }
             
             if (squareChannel::volume == 0 || squareChannel::volume == 15)
