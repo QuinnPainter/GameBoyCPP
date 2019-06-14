@@ -40,8 +40,9 @@ memory::~memory()
     delete[] memory::memBytes;
 }
 
-void memory::init(byte* gameRom, byte* input, int* timer, byte* bootrom)
+void memory::init(byte* gameRom, byte* input, unsigned int* timer, apu* sound, byte* bootrom)
 {
+    memory::APU = sound;
     memory::inputState = input;
     memory::timerCounter = timer;
     memory::rom = gameRom;
@@ -101,6 +102,11 @@ byte memory::get8(ushort address)
     {
         //unused area
         return 0x00;
+    }
+    if (address == 0xFF26)
+    {
+        //sound status register
+        return APU->requestStatus();
     }
     if (address >= 0xA000 && address < 0xC000)
     {
@@ -262,6 +268,11 @@ void memory::set8(ushort address, byte value, bool force)
             //LCD status register
             memory::memBytes[0xFF41] = value | 0x80;
             return;
+        }
+        if (address >= 0xFF10 && address < 0xFF40)
+        {
+            //sound registers
+            memory::APU->updateRegister(address, value);
         }
 
         //cartridge RAM

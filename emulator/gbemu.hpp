@@ -4,6 +4,7 @@
 #include "cpu.hpp"
 #include "gpu.hpp"
 #include "input.hpp"
+#include "sound.hpp"
 
 void initSDL();
 byte handleInterrupts(cpu* CPU, memory* mem);

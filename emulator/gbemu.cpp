@@ -2,13 +2,13 @@
 #include "gbemu.hpp"
 
 //Options
-const int clockspeed = 4194304; //number of clock cycles in a second / speed of CPU in hz
-const int framerate = 60; //framerate to run emulator at. native gameboy is 60
+const unsigned int clockspeed = 4194304; //number of clock cycles in a second / speed of CPU in hz
+const unsigned int framerate = 60; //framerate to run emulator at. native gameboy is 60
 
 //Timers
-int DividerCounter = 0;
-int TimerFrequency = 4096;
-int TimerCounter = 0;
+unsigned int DividerCounter = 0;
+unsigned int TimerFrequency = 4096;
+unsigned int TimerCounter = 0;
 
 //arg 1 is game rom, arg 2 is bootrom
 int main (int argc, char** argv)
@@ -29,10 +29,12 @@ int main (int argc, char** argv)
     byte* cart = new byte[fsize];
     fread(cart, fsize, 1, f);
     fclose(f);
-
+    
+    initSDL();
     memory Memory{};
     cpuState state{};
     input Input(&Memory);
+    apu APU(clockspeed);
     byte* bootrom = new byte[256];
     if (argv[2] != NULL)
     {
@@ -44,12 +46,12 @@ int main (int argc, char** argv)
     	}
         fread(bootrom, 256, 1, f);
         fclose(f);
-        Memory.init(cart, &(Input.inputState), &TimerCounter, bootrom);
+        Memory.init(cart, &(Input.inputState), &TimerCounter, &APU, bootrom);
         //no need to initialize cpu state if bootrom is present
     }
     else
     {
-        Memory.init(cart, &(Input.inputState), &TimerCounter);
+        Memory.init(cart, &(Input.inputState), &TimerCounter, &APU);
         state.PC = 0x0100; //skip bootrom
         state.SP = 0xFFFE; //initialise stack pointer as bootrom would
         state.AF = 0x01B0; //these init values are different between DMG, CGB and SGB - these are DMG
@@ -63,7 +65,6 @@ int main (int argc, char** argv)
     Memory.set8(0xFF49, 0xFF, true);
 
     Memory.set8(0xFF00, 0xCF, true); //initialise input register
-    initSDL();
 
     cpu CPU(state, &Memory);
     gpu GPU(&Memory);
@@ -114,6 +115,7 @@ int main (int argc, char** argv)
             }
             cycleCounter += info.numCycles;
             handleTimers(info.numCycles, &Memory);
+            APU.handleSound(info.numCycles);
             GPU.update(info.numCycles);
         }
         GPU.displayScreen();
@@ -222,7 +224,7 @@ void handleTimers(int cycles, memory* mem)
     }
     //Timer
     bool enabled = getBit(mem->get8(0xFF07), 2);
-    int newFrequency;
+    unsigned int newFrequency;
     byte frequencySetting = mem->get8(0xFF07) & 0x3; //Get first 2 bits of timer control register
     switch (frequencySetting)
     {

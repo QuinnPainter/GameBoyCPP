@@ -73,7 +73,7 @@ gpu::gpu(memory* mem)
         logging::logerr("Surface could not be created! SDL_Error: " + std::string(SDL_GetError()));
     }
     */
-    gpu::screenRenderer = SDL_CreateRenderer(gpu::window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    gpu::screenRenderer = SDL_CreateRenderer(gpu::window, -1, SDL_RENDERER_ACCELERATED/* | SDL_RENDERER_PRESENTVSYNC*/);
     if (gpu::screenRenderer == NULL)
     {
         logging::logerr("Renderer could not be created! SDL_Error: " + std::string(SDL_GetError()));
