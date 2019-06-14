@@ -1,10 +1,11 @@
 #pragma once
 
 #include "squarechannel.hpp"
+#include "wavechannel.hpp"
 
 const int sampleFrequency = 44100;
 const ushort sampleSize = 4096;
-const unsigned int masterVolume = 10;
+const unsigned int masterVolume = 50;
 
 class apu
 {
@@ -21,8 +22,9 @@ class apu
         unsigned int bufferIndex = 0;
         unsigned int addToBufferCounter = 0;
 
-        squareChannel channel2;
         squareChannel channel1;
+        squareChannel channel2;
+        waveChannel channel3;
 
         unsigned int frameSequenceCounter = 0;
         byte frameSequencer = 0;
