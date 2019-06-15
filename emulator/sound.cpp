@@ -69,7 +69,7 @@ byte apu::requestStatus()
     status = setBit(status, 0, apu::channel1.getStatus());
     status = setBit(status, 1, apu::channel2.getStatus());
     status = setBit(status, 2, apu::channel3.getStatus());
-    //insert noise channel status here
+    status = setBit(status, 3, apu::channel4.getStatus());
     return status;
 }
 
@@ -88,6 +88,7 @@ void apu::handleSound(int cycles)
                 apu::channel1.lengthCounterClock();
                 apu::channel2.lengthCounterClock();
                 apu::channel3.lengthCounterClock();
+                apu::channel4.lengthCounterClock();
                 if (frameSequencer == 2 || frameSequencer == 6)
                 {
                     //sweep clock
@@ -97,6 +98,7 @@ void apu::handleSound(int cycles)
             {
                 apu::channel1.volumeEnvelopeClock();
                 apu::channel2.volumeEnvelopeClock();
+                apu::channel4.volumeEnvelopeClock();
             }
 
             frameSequencer++;
@@ -109,6 +111,7 @@ void apu::handleSound(int cycles)
         apu::channel1.step();
         apu::channel2.step();
         apu::channel3.step();
+        apu::channel4.step();
 
         apu::addToBufferCounter++;
         if (apu::addToBufferCounter >= (clockspeed / sampleFrequency))
@@ -129,6 +132,10 @@ void apu::handleSound(int cycles)
             {
                 lBuffer += apu::channel3.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
             }
+            if (getBit(apu::enables, 7))
+            {
+                lBuffer += apu::channel4.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
+            }
             //right channel
             if (getBit(apu::enables, 0))
             {
@@ -141,6 +148,10 @@ void apu::handleSound(int cycles)
             if (getBit(apu::enables, 2))
             {
                 rBuffer += apu::channel3.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
+            }
+            if (getBit(apu::enables, 3))
+            {
+                rBuffer += apu::channel4.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
             }
 
             apu::buffer[apu::bufferIndex] = lBuffer;
@@ -186,28 +197,33 @@ void apu::updateRegister(ushort address, byte value)
         case 0xFF1D: apu::channel3.updateRegister(3, value); break;
         case 0xFF1E: apu::channel3.updateRegister(4, value); break;
 
+        case 0xFF20: apu::channel4.updateRegister(1, value); break;
+        case 0xFF21: apu::channel4.updateRegister(2, value); break;
+        case 0xFF22: apu::channel4.updateRegister(3, value); break;
+        case 0xFF23: apu::channel4.updateRegister(4, value); break;
+
         case 0xFF24:
             apu::lVolume = ((value & 0x70) >> 4);
             apu::rVolume = (value & 0x7);
             break;
         case 0xFF25: apu::enables = value; break;
-        case 0xFF26: apu::power = getBit(value, 7);
+        case 0xFF26: apu::power = getBit(value, 7); break;
 
-        case 0xFF30: apu::channel3.updateWavetable(0, value);
-        case 0xFF31: apu::channel3.updateWavetable(1, value);
-        case 0xFF32: apu::channel3.updateWavetable(2, value);
-        case 0xFF33: apu::channel3.updateWavetable(3, value);
-        case 0xFF34: apu::channel3.updateWavetable(4, value);
-        case 0xFF35: apu::channel3.updateWavetable(5, value);
-        case 0xFF36: apu::channel3.updateWavetable(6, value);
-        case 0xFF37: apu::channel3.updateWavetable(7, value);
-        case 0xFF38: apu::channel3.updateWavetable(8, value);
-        case 0xFF39: apu::channel3.updateWavetable(9, value);
-        case 0xFF3A: apu::channel3.updateWavetable(10, value);
-        case 0xFF3B: apu::channel3.updateWavetable(11, value);
-        case 0xFF3C: apu::channel3.updateWavetable(12, value);
-        case 0xFF3D: apu::channel3.updateWavetable(13, value);
-        case 0xFF3E: apu::channel3.updateWavetable(14, value);
-        case 0xFF3F: apu::channel3.updateWavetable(15, value);
+        case 0xFF30: apu::channel3.updateWavetable(0, value); break;
+        case 0xFF31: apu::channel3.updateWavetable(1, value); break;
+        case 0xFF32: apu::channel3.updateWavetable(2, value); break;
+        case 0xFF33: apu::channel3.updateWavetable(3, value); break;
+        case 0xFF34: apu::channel3.updateWavetable(4, value); break;
+        case 0xFF35: apu::channel3.updateWavetable(5, value); break;
+        case 0xFF36: apu::channel3.updateWavetable(6, value); break;
+        case 0xFF37: apu::channel3.updateWavetable(7, value); break;
+        case 0xFF38: apu::channel3.updateWavetable(8, value); break;
+        case 0xFF39: apu::channel3.updateWavetable(9, value); break;
+        case 0xFF3A: apu::channel3.updateWavetable(10, value); break;
+        case 0xFF3B: apu::channel3.updateWavetable(11, value); break;
+        case 0xFF3C: apu::channel3.updateWavetable(12, value); break;
+        case 0xFF3D: apu::channel3.updateWavetable(13, value); break;
+        case 0xFF3E: apu::channel3.updateWavetable(14, value); break;
+        case 0xFF3F: apu::channel3.updateWavetable(15, value); break;
     }
 }

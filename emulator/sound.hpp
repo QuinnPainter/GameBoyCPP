@@ -2,6 +2,7 @@
 
 #include "squarechannel.hpp"
 #include "wavechannel.hpp"
+#include "noisechannel.hpp"
 
 const int sampleFrequency = 44100;
 const ushort sampleSize = 4096;
@@ -25,6 +26,7 @@ class apu
         squareChannel channel1;
         squareChannel channel2;
         waveChannel channel3;
+        noiseChannel channel4;
 
         unsigned int frameSequenceCounter = 0;
         byte frameSequencer = 0;
