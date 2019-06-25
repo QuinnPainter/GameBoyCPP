@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string>
 #include <sstream>
-#include <bitset>
+//#include <bitset>
 #include <algorithm>
 //#include <chrono>
 #include <SDL.h>

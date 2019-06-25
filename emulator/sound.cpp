@@ -119,39 +119,41 @@ void apu::handleSound(int cycles)
             apu::addToBufferCounter = 0;
             short lBuffer = 0;
             short rBuffer = 0;
+            int lVolume = (apu::lVolume + 1) * masterVolume;
+            int rVolume = (apu::rVolume + 1) * masterVolume;
             //left channel
             if (getBit(apu::enables, 4))
             {
-                lBuffer += apu::channel1.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
+                lBuffer += apu::channel1.getCurrentOutput() * lVolume;
             }
             if (getBit(apu::enables, 5))
             {
-                lBuffer += apu::channel2.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
+                lBuffer += apu::channel2.getCurrentOutput() * lVolume;
             }
             if (getBit(apu::enables, 6))
             {
-                lBuffer += apu::channel3.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
+                lBuffer += apu::channel3.getCurrentOutput() * lVolume;
             }
             if (getBit(apu::enables, 7))
             {
-                lBuffer += apu::channel4.getCurrentOutput() * (apu::lVolume + 1) * masterVolume;
+                lBuffer += apu::channel4.getCurrentOutput() * lVolume;
             }
             //right channel
             if (getBit(apu::enables, 0))
             {
-                rBuffer += apu::channel1.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
+                rBuffer += apu::channel1.getCurrentOutput() * rVolume;
             }
             if (getBit(apu::enables, 1))
             {
-                rBuffer += apu::channel2.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
+                rBuffer += apu::channel2.getCurrentOutput() * rVolume;
             }
             if (getBit(apu::enables, 2))
             {
-                rBuffer += apu::channel3.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
+                rBuffer += apu::channel3.getCurrentOutput() * rVolume;
             }
             if (getBit(apu::enables, 3))
             {
-                rBuffer += apu::channel4.getCurrentOutput() * (apu::rVolume + 1) * masterVolume;
+                rBuffer += apu::channel4.getCurrentOutput() * rVolume;
             }
 
             apu::buffer[apu::bufferIndex] = lBuffer;
@@ -160,12 +162,14 @@ void apu::handleSound(int cycles)
             apu::bufferIndex += 2;
             if (apu::bufferIndex >= sampleSize)
             {
+                
                 //Wait until we need more audio
                 float delay = (float)((signed int)(SDL_GetQueuedAudioSize(apu::device) / (sizeof(short) * 2)) - (signed int)sampleSize * 2) / (float)sampleFrequency;
                 if (delay > 0)
                 {
                     SDL_Delay((Uint32)(delay * 1000));
                 }
+                
                 if (power)
                 {
                     SDL_QueueAudio(apu::device, buffer, sampleSize * sizeof(short));

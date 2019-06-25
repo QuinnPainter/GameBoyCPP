@@ -387,7 +387,7 @@ byte gpu::paletteAdjustColour(byte colour, byte palette)
 
 void gpu::drawPixel(byte x, byte y, byte colour)
 {
-    SDL_Colour pixColour;
+    SDL_Colour pixColour = {0, 0, 0, 0};
     switch (colour)
     {
         case 0:

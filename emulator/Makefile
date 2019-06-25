@@ -6,4 +6,4 @@ LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2
 OBJ_NAME = gbemu
 
 all : $(OBJS)
-	$(CC) $(OBJS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(LINKER_FLAGS) -Wall -o $(OBJ_NAME)
+	$(CC) $(OBJS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(LINKER_FLAGS) -Wall -O2 -o $(OBJ_NAME)

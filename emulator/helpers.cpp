@@ -53,17 +53,35 @@ byte lowByte(ushort s)
 //bits go from right to left, 0 to 7
 byte setBit(byte b, byte index, bool value)
 {
+    if (index > 7)
+    {
+        logging::logerr("setBit index cannot be greater than 7!");
+    }
+    /*
     std::bitset<8> bits = b;
     bits[index] = value;
     return static_cast<byte>(bits.to_ulong());
+    */
+    byte ret = b;
+    ret &= ~(1 << index);
+    ret |= value << index;
+    return ret;
 }
 
 //returns bit with index from a byte
 //bits go from right to left, 0 to 7
 bool getBit(byte b, byte index)
 {
+    if (index > 7)
+    {
+        logging::logerr("getBit index cannot be greater than 7!");
+    }
+    /*
     std::bitset<8> bits = b;
     return bits[index];
+    */
+    byte bit = 1 << index;
+    return ((b & bit) == bit);
 }
 
 //Bitwise reverses a byte eg. 01 becomes 80
