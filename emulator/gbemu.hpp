@@ -9,3 +9,4 @@
 void initSDL();
 byte handleInterrupts(cpu* CPU, memory* mem);
 void handleTimers(int cycles, memory* mem);
+void accurateSleep(float ms);

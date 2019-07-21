@@ -53,7 +53,7 @@ const SDL_Color colour2 = {52,104,86,SDL_ALPHA_OPAQUE};  //10: Dark Grey
 const SDL_Color colour3 = {8,24,32,SDL_ALPHA_OPAQUE};  //11: Black
 const int XResolution = 160;
 const int YResolution = 144;
-const int Scale = 2;
+const int Scale = 3;
 const int SCREEN_WIDTH = XResolution * Scale;
 const int SCREEN_HEIGHT = YResolution * Scale;
 
@@ -73,6 +73,7 @@ gpu::gpu(memory* mem)
         logging::logerr("Surface could not be created! SDL_Error: " + std::string(SDL_GetError()));
     }
     */
+    //note: presentvsync locks to 144fps on a 144hz screen, which is way too fast
     gpu::screenRenderer = SDL_CreateRenderer(gpu::window, -1, SDL_RENDERER_ACCELERATED/* | SDL_RENDERER_PRESENTVSYNC*/);
     if (gpu::screenRenderer == NULL)
     {

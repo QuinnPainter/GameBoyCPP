@@ -14,12 +14,13 @@ class apu
         apu(unsigned int clock);
         ~apu();
         void handleSound(int cycles);
+        void dumpBuffer();
         byte requestStatus();
         void updateRegister(ushort address, byte value);
     private:
         unsigned int clockspeed;
         SDL_AudioDeviceID device;
-        short buffer[sampleSize] = {};
+        short buffer[sampleSize * 10] = {};
         unsigned int bufferIndex = 0;
         unsigned int addToBufferCounter = 0;
 

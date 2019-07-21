@@ -73,11 +73,11 @@ int main (int argc, char** argv)
     int cycleCounter = 0;
     bool quit = false;
     SDL_Event event;
-    //timePoint frameStart;
-    //timePoint frameEnd;
+    timePoint frameStart;
+    timePoint frameEnd;
     while(!quit)
     {
-        //frameStart = Clock::now();
+        frameStart = Clock::now();
         while(SDL_PollEvent(&event) != 0)
         {
             switch(event.type)
@@ -119,15 +119,15 @@ int main (int argc, char** argv)
             GPU.update(info.numCycles);
         }
         GPU.displayScreen();
-        /*
+        
         frameEnd = Clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( frameEnd - frameStart ).count();
-        int delay = ((1000/framerate) - duration);
-        if (delay > 0)
-        {
-            SDL_Delay(delay);
-        }
-        */
+        float duration = (float)(std::chrono::duration_cast<std::chrono::microseconds>( frameEnd - frameStart ).count()) / 1000;
+        float delay = ((1000/(float)framerate) - duration);
+        //SDL_Delay(delay);
+        //std::cout <<delay << "\n";
+        APU.dumpBuffer();
+        accurateSleep(delay);
+        
     }
 
     //cleanup before exit here
@@ -136,6 +136,21 @@ int main (int argc, char** argv)
     delete[] bootrom;
     logging::log("Exited successfully");
     return 0;
+}
+
+void accurateSleep(float ms)
+{
+    if (ms <= 0)
+    {
+        return;
+    }
+    //SDL_Delay((Uint32)ms);
+    timePoint start = Clock::now();
+    timePoint timer = start;
+    while ((float)(std::chrono::duration_cast<std::chrono::microseconds>(timer - start).count()) / 1000 < ms)
+    {
+        timer = Clock::now();
+    }
 }
 
 //Interrupts:

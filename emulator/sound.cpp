@@ -155,29 +155,36 @@ void apu::handleSound(int cycles)
             {
                 rBuffer += apu::channel4.getCurrentOutput() * rVolume;
             }
-
+            
             apu::buffer[apu::bufferIndex] = lBuffer;
             apu::buffer[apu::bufferIndex + 1] = rBuffer;
-
             apu::bufferIndex += 2;
+            /*
             if (apu::bufferIndex >= sampleSize)
             {
-                
                 //Wait until we need more audio
-                float delay = (float)((signed int)(SDL_GetQueuedAudioSize(apu::device) / (sizeof(short) * 2)) - (signed int)sampleSize * 2) / (float)sampleFrequency;
-                if (delay > 0)
-                {
-                    SDL_Delay((Uint32)(delay * 1000));
-                }
-                
+                //float delay = (float)((signed int)(SDL_GetQueuedAudioSize(apu::device) / (sizeof(short) * 2)) - (signed int)sampleSize * 2) / (float)sampleFrequency;
+                //if (delay > 0)
+                //{
+                //    SDL_Delay((Uint32)(delay * 1000));
+                //}
                 if (power)
                 {
                     SDL_QueueAudio(apu::device, buffer, sampleSize * sizeof(short));
                 }
                 apu::bufferIndex = 0;
             }
+            */
+            //short tempBuf[2] = {lBuffer, rBuffer};
+            //SDL_QueueAudio(apu::device, tempBuf, sizeof(tempBuf));
         }
     }
+}
+
+void apu::dumpBuffer()
+{
+    SDL_QueueAudio(apu::device, apu::buffer, bufferIndex * sizeof(short));
+    apu::bufferIndex = 0;
 }
 
 void apu::updateRegister(ushort address, byte value)
