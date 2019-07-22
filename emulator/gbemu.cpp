@@ -10,6 +10,8 @@ unsigned int DividerCounter = 0;
 unsigned int TimerFrequency = 4096;
 unsigned int TimerCounter = 0;
 
+float SleepInaccuracyModifier = 0;
+
 //arg 1 is game rom, arg 2 is bootrom
 int main (int argc, char** argv)
 {
@@ -75,8 +77,13 @@ int main (int argc, char** argv)
     SDL_Event event;
     timePoint frameStart;
     timePoint frameEnd;
+
+    //int fpsCounter = 0;
+    timePoint fpsTimerStart = Clock::now();
+    timePoint fpsTimerEnd;
     while(!quit)
     {
+        fpsTimerStart = Clock::now();
         frameStart = Clock::now();
         while(SDL_PollEvent(&event) != 0)
         {
@@ -119,15 +126,46 @@ int main (int argc, char** argv)
             GPU.update(info.numCycles);
         }
         GPU.displayScreen();
-        
+        APU.dumpBuffer();
+
         frameEnd = Clock::now();
         float duration = (float)(std::chrono::duration_cast<std::chrono::microseconds>( frameEnd - frameStart ).count()) / 1000;
         float delay = ((1000/(float)framerate) - duration);
         //SDL_Delay(delay);
         //std::cout <<delay << "\n";
-        APU.dumpBuffer();
         accurateSleep(delay);
-        
+        fpsTimerEnd = Clock::now();
+        float fps = (1 / ((float)(std::chrono::duration_cast<std::chrono::microseconds>( fpsTimerEnd - fpsTimerStart).count()) / 1000000));
+        if (fps > 60.1 && SleepInaccuracyModifier > 0)
+        {
+           SleepInaccuracyModifier -= 0.01;
+        }
+        else if (fps < 59.9 && SleepInaccuracyModifier < 1.5)
+        {
+            SleepInaccuracyModifier += 0.01;
+        }
+        //std::cout << "FPS: " << fps << " " << SleepInaccuracyModifier <<  "\n";
+        /*
+        fpsCounter++;
+        if (fpsCounter == 60)
+        {
+            fpsTimerEnd = Clock::now();
+            fpsCounter = 0;
+            float timeFor60Frames = (float)(std::chrono::duration_cast<std::chrono::milliseconds>( fpsTimerEnd - fpsTimerStart).count()) / 1000;
+            float timeFor1Frame = timeFor60Frames / 60;
+            float fps = (1 / timeFor1Frame);
+            std::cout << "FPS: " << fps << "\n";
+            if (fps > 60.1 && SleepInaccuracyModifier > 0)
+            {
+                SleepInaccuracyModifier -= 0.1;
+            }
+            else if (fps < 59.9 && SleepInaccuracyModifier < 1.5)
+            {
+                SleepInaccuracyModifier += 0.1;
+            }
+            fpsTimerStart = Clock::now();
+        }
+        */
     }
 
     //cleanup before exit here
@@ -140,6 +178,7 @@ int main (int argc, char** argv)
 
 void accurateSleep(float ms)
 {
+    ms -= SleepInaccuracyModifier;
     if (ms <= 0)
     {
         return;
