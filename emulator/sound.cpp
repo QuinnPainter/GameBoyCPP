@@ -156,8 +156,12 @@ void apu::handleSound(int cycles)
                 rBuffer += apu::channel4.getCurrentOutput() * rVolume;
             }
             
-            apu::buffer[apu::bufferIndex] = lBuffer;
-            apu::buffer[apu::bufferIndex + 1] = rBuffer;
+            //if DAC is off, just load 0 into the audio queue to keep the audio device running and in sync
+            if (power)
+            {
+                apu::buffer[apu::bufferIndex] = lBuffer;
+                apu::buffer[apu::bufferIndex + 1] = rBuffer;
+            }
             apu::bufferIndex += 2;
             /*
             if (apu::bufferIndex >= sampleSize)
