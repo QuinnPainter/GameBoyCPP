@@ -180,9 +180,21 @@ void apu::handleSound(int cycles)
         }
     }
 }
-
+byte count = 0;
 void apu::dumpBuffer()
 {
+    count++;
+    if (count == 60)
+    {
+        count = 0;
+        float audioDelay = ((SDL_GetQueuedAudioSize(apu::device) / (sizeof(short) * 2)) / (float)sampleFrequency) * 1000;
+        if (audioDelay > 300)
+        {
+            //emergency measure to keep audio in sync: if queue gets too long, purge it so audio stays in sync
+            SDL_ClearQueuedAudio(apu::device);
+            logging::log("Audio out of sync by " + std::to_string(audioDelay) + "ms");
+        }
+    }
     SDL_QueueAudio(apu::device, apu::buffer, bufferIndex * sizeof(short));
     apu::bufferIndex = 0;
 }
