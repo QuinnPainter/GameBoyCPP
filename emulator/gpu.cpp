@@ -61,6 +61,7 @@ gpu::gpu(memory* mem)
 {
     gpu::Memory = mem;
     gpu::cycleCounter = 456; //Takes 456 cycles to draw one scanline
+    gpu::currentWindowLine = 0;
     gpu::window = SDL_CreateWindow("Gameboy Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if(gpu::window == NULL)
     {
@@ -86,43 +87,10 @@ gpu::~gpu()
 {
     SDL_DestroyTexture(gpu::screenTexture);
     SDL_DestroyRenderer(gpu::screenRenderer);
-    //SDL_FreeSurface(gpu::screenBuffer);
     SDL_DestroyWindow(gpu::window);
 }
 
 void gpu::update(int cycles)
-{
-    gpu::setStatus();
-    if (getBit(Memory->get8(0xFF40), 7) == 0) //LCD is disabled
-    {
-        return;
-    }
-    gpu::cycleCounter -= cycles;
-    if (gpu::cycleCounter <= 0)
-    {
-        gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) + 1, true);
-        byte currentScanline = gpu::Memory->get8(0xFF44);
-        gpu::cycleCounter = 456;
-
-        if (currentScanline == 144)
-        {
-            gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 0, 1)); // request VBlank interrupt
-        }
-        else if (currentScanline > 153)
-        {
-            gpu::Memory->set8(0xFF44, 0, true);
-        }
-        //hacky solution for bringing currentScanline from a range of 1-143 to 0-143
-        if (currentScanline < 145)
-        {
-            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) - 1, true);
-            gpu::drawScanline();
-            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) + 1, true);
-        }
-    }
-}
-
-void gpu::setStatus()
 {
     byte status = gpu::Memory->get8(0xFF41);
     if (getBit(gpu::Memory->get8(0xFF40), 7) == 0) //LCD is disabled
@@ -141,6 +109,7 @@ void gpu::setStatus()
         gpu::setLCDMode(1);
         interruptsEnabled = getBit(status, 4);
         newMode = 1;
+        currentWindowLine = 0;
     }
     else
     {
@@ -172,16 +141,46 @@ void gpu::setStatus()
     {
         gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 1, 1)); // request LCD interrupt
     }
-    bool coincidence = (gpu::Memory->get8(0xFF45) == currentScanline);
-    if (coincidence)
+
+
+    /*if (getBit(Memory->get8(0xFF40), 7) == 0) //LCD is disabled
     {
-        //coincidence interrupt
-        if (getBit(status, 6))
+        return;
+    }*/
+    gpu::cycleCounter -= cycles;
+    if (gpu::cycleCounter <= 0)
+    {
+        gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) + 1, true);
+        currentScanline = gpu::Memory->get8(0xFF44);
+        gpu::cycleCounter = 456;
+
+        if (currentScanline == 144)
         {
-            gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 1, 1)); // request LCD interrupt
+            gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 0, 1)); // request VBlank interrupt
         }
+        else if (currentScanline > 153)
+        {
+            gpu::Memory->set8(0xFF44, 0, true);
+        }
+        //hacky solution for bringing currentScanline from a range of 1-143 to 0-143
+        if (currentScanline < 145)
+        {
+            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) - 1, true);
+            gpu::drawScanline();
+            gpu::Memory->set8(0xFF44, gpu::Memory->get8(0xFF44) + 1, true);
+        }
+
+        bool coincidence = (gpu::Memory->get8(0xFF45) == gpu::Memory->get8(0xFF44));
+        if (coincidence)
+        {
+            //coincidence interrupt
+            if (getBit(status, 6))
+            {
+                gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 1, 1)); // request LCD interrupt
+            }
+        }
+        gpu::Memory->set8(0xFF41, setBit(gpu::Memory->get8(0xFF41), 2, coincidence));
     }
-    gpu::Memory->set8(0xFF41, setBit(gpu::Memory->get8(0xFF41), 2, coincidence));
 }
 
 void gpu::setLCDMode(int mode)
@@ -211,9 +210,28 @@ void gpu::drawScanline()
     {
         gpu::drawBackground();
     }
+    else
+    {
+        // Blank out the scanline from colour 0 in background palette
+        byte colourNumber = gpu::paletteAdjustColour(0, gpu::Memory->get8(0xFF47));
+        byte currentScanline = gpu::Memory->get8(0xFF44);
+        for (int x = 0; x < XResolution; x++)
+        {
+            gpu::drawPixel(x, currentScanline, colourNumber);
+        }
+    }
     if (getBit(options, 1))
     {
         gpu::drawSprites();
+    }
+
+    byte windowY = gpu::Memory->get8(0xFF4A);
+    byte windowX = gpu::Memory->get8(0xFF4B) - 7;
+    byte currentScanline = gpu::Memory->get8(0xFF44);
+    bool onWindowLine = getBit(options, 5) && (windowY <= currentScanline) && (windowX <= 160);
+    if (onWindowLine)
+    {
+        currentWindowLine++;
     }
 }
 
@@ -252,7 +270,8 @@ void gpu::drawBackground()
         byte adjustedX;
         if (drawingWindow)
         {
-            adjustedY = currentScanline - windowY;
+            //adjustedY = currentScanline - windowY;
+            adjustedY = currentWindowLine;
             adjustedX = x - windowX;
         }
         else
@@ -289,9 +308,14 @@ void gpu::drawSprites()
 {
     byte currentScanline = gpu::Memory->get8(0xFF44);
     byte spriteSize = getBit(gpu::Memory->get8(0xFF40), 2) ? 16 : 8;
-    //do sprites backwards for semi-correct depth priorities
-    for (int spriteNum = 39; spriteNum >= 0; spriteNum--)
+    int spritesInLine = 0;
+
+    for (int spriteNum = 0; spriteNum < 40; spriteNum++)
     {
+        if (spritesInLine >= 10)
+        {
+            break; // no need to process any more sprites
+        }
         byte spriteIndex = spriteNum * 4;
         int yPos = gpu::Memory->get8(0xFE00 + spriteIndex) - 16;
         int xPos = gpu::Memory->get8(0xFE00 + spriteIndex + 1) - 8;
@@ -311,6 +335,7 @@ void gpu::drawSprites()
 
         if ((currentScanline >= yPos) && (currentScanline < (yPos + spriteSize)))
         {
+            spritesInLine++;
             byte tileLine = currentScanline - yPos;
             if (yFlip)
             {

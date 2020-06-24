@@ -826,14 +826,14 @@ instrInfo cpu::LD_DE_A()
     cpu::Memory->set8(cpu::state.DE, cpu::state.A);
     return {1,8};
 }
-//Copies A ino the memory held in HL, and increments HL
+//Copies A into the memory held in HL, and increments HL
 instrInfo cpu::LDI_HL_A()
 {
     cpu::Memory->set8(cpu::state.HL, cpu::state.A);
     cpu::state.HL++;
     return {1,8};
 }
-//Copies A ino the memory held in HL, and decrements HL
+//Copies A into the memory held in HL, and decrements HL
 instrInfo cpu::LDD_HL_A()
 {
     cpu::Memory->set8(cpu::state.HL, cpu::state.A);
@@ -1465,6 +1465,8 @@ instrInfo cpu::STOP()
 }
 
 // Rotate Shift Instructions
+
+// TODO: None of these shifts set the Z flag. Should they?
 
 //Rotates A to the left.
 //Flags: H = 0, N = 0, Z = 0, C = bit 7 of A before operation

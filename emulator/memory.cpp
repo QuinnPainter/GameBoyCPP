@@ -30,7 +30,7 @@
 
 memory::memory()
 {
-    memory::memBytes = new byte[0xFFFF];
+    memory::memBytes = new byte[0xFFFF + 1];
     memory::bootrom = nullptr;
 }
 
@@ -266,7 +266,9 @@ void memory::set8(ushort address, byte value, bool force)
         if (address == 0xFF41)
         {
             //LCD status register
-            memory::memBytes[0xFF41] = value | 0x80;
+            memory::memBytes[0xFF41] &= 0x7;
+            memory::memBytes[0xFF41] |= (value & 0xF8) | 0x80;
+            //memory::memBytes[0xFF41] = value | 0x80;
             return;
         }
         if (address >= 0xFF10 && address < 0xFF40)

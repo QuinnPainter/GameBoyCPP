@@ -18,7 +18,7 @@ class gpu
         SDL_Texture* screenTexture;
         SDL_Renderer* screenRenderer;
         int cycleCounter;
-        void setStatus();
+        int currentWindowLine;
         void setLCDMode(int mode);
         void drawScanline();
         void drawBackground();
