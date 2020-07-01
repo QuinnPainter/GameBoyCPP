@@ -31,6 +31,7 @@
 memory::memory()
 {
     memory::memBytes = new byte[0xFFFF + 1];
+    memset(memBytes, 0, 0xFFFF + 1);
     memory::bootrom = nullptr;
 }
 

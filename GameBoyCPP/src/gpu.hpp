@@ -19,7 +19,7 @@ class gpu
         SDL_Renderer* screenRenderer;
         int cycleCounter;
         int currentWindowLine;
-        void setLCDMode(int mode);
+        void setLCDMode(byte mode);
         void drawScanline();
         void drawBackground();
         void drawSprites();

@@ -179,15 +179,15 @@ void gpu::update(int cycles)
                 gpu::Memory->set8(0xFF0F, setBit(gpu::Memory->get8(0xFF0F), 1, 1)); // request LCD interrupt
             }
         }
-        gpu::Memory->set8(0xFF41, setBit(gpu::Memory->get8(0xFF41), 2, coincidence));
+        gpu::Memory->set8(0xFF41, setBit(gpu::Memory->get8(0xFF41), 2, coincidence), true);
     }
 }
 
-void gpu::setLCDMode(int mode)
+void gpu::setLCDMode(byte mode)
 {
     byte status = gpu::Memory->get8(0xFF41);
     status &= 0xFC; //reset last 2 bits
-    switch (mode)
+    /*switch (mode)
     {
         case 1:
             status = setBit(status, 0, 1);
@@ -199,8 +199,9 @@ void gpu::setLCDMode(int mode)
             status = setBit(status, 0, 1);
             status = setBit(status, 1, 1);
             break;
-    }
-    gpu::Memory->set8(0xFF41, status);
+    }*/
+    status |= mode & 0x3;
+    gpu::Memory->set8(0xFF41, status, true);
 }
 
 void gpu::drawScanline()
@@ -298,7 +299,7 @@ void gpu::drawBackground()
         //convert from 0 - 7 to 7 - 0
         colourIndex = ((colourIndex - 7) * -1);
 
-        byte colourNumber = ((getBit(line2, colourIndex) << 1) | getBit(line1, colourIndex));
+        byte colourNumber = (((byte)getBit(line2, colourIndex) << 1) | (byte)getBit(line1, colourIndex));
         colourNumber = gpu::paletteAdjustColour(colourNumber, gpu::Memory->get8(0xFF47));
         gpu::drawPixel(x, currentScanline, colourNumber);
     }
@@ -354,7 +355,7 @@ void gpu::drawSprites()
             for (int pixel = 0; pixel < 8; pixel++)
             {
                 int colourIndex = ((pixel - 7) * -1);
-                byte colourNumber = ((getBit(line2, colourIndex) << 1) | getBit(line1, colourIndex));
+                byte colourNumber = (((byte)getBit(line2, colourIndex) << 1) | (byte)getBit(line1, colourIndex));
                 //check for transparency before palette adjusting
                 if (colourNumber == 0)
                 {
