@@ -9,7 +9,8 @@ For Windows only.
 Accepts the ROM file path as its only argument.  
 e.g. `rominfo.exe tetris.gb`
 ## Example Output
-```Game name: TETRIS
+```
+Game name: TETRIS
 Boot logo: Valid
 ████      ████  ████                                                          ████
 ██████    ████  ████                ████                                      ████
